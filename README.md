@@ -19,6 +19,8 @@ The map supports:
 - Debounced search across titles, descriptions, and source paths (including collapsed nodes), with match count
 - Hover/focus tooltips and keyboard-operable nodes
 - Drag nodes to arrange them while links update live
+- Offline SVG, PNG, Markdown outline, and JSON exports (including collapsed map data)
+- Local persistence for collapse state, node positions, zoom, and selection, with separate **Reset state** and **Reset view** controls
 - Keyboard shortcuts: `/` search · `+`/`-` zoom · `0` reset · `Esc` clear
 - A details panel with the authoritative source path
 - Responsive desktop, tablet, and Realme P2 Pro layouts

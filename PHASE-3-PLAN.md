@@ -10,6 +10,13 @@ Planned in parallel by three workstreams. Merge order: **A → B → C → docs/
 
 ## Workstream A — Export & Persistence
 
+**Status:** Implementation complete; browser specs appended for the parent-owned serialized run.
+
+- [x] Offline SVG / PNG / Markdown / JSON exports
+- [x] Title-keyed LocalStorage view-state persistence and separate reset-state behavior
+- [x] Compact export menu usable at 360px
+- [x] Test APIs and Workstream A Playwright specifications
+
 ### Scope
 Offline export (SVG / PNG / Markdown / JSON) and LocalStorage view-state restore. No new runtime deps.
 
