@@ -1,6 +1,7 @@
 // E2E validation of the offline D3 mindmap UI.
 const { test, expect } = require('@playwright/test');
 const path = require('path');
+const fs = require('fs');
 
 const APP_URL =
   'file://' + path.resolve(__dirname, '..', 'index.html').replace(/\\/g, '/');
@@ -178,4 +179,117 @@ test('node drag records a custom offset and keeps links rendered', async ({ page
   expect(Math.abs(result.dragY)).toBeGreaterThan(5);
   await expect(node(page, 'Governance')).toHaveAttribute('transform', /translate\(/);
   await expect(page.locator('path.link').first()).toBeVisible();
+});
+
+test('export menu and reset state remain reachable in the viewport', async ({ page }) => {
+  await expect(page.locator('#export-menu > summary')).toBeVisible();
+  await expect(page.locator('#reset-state')).toBeVisible();
+  await page.locator('#export-menu > summary').click();
+
+  for (const selector of ['#export-svg', '#export-png', '#export-md', '#export-json']) {
+    const control = page.locator(selector);
+    await expect(control).toBeVisible();
+    const box = await control.boundingBox();
+    const viewport = page.viewportSize();
+    expect(box.x).toBeGreaterThanOrEqual(0);
+    expect(box.x + box.width).toBeLessThanOrEqual(viewport.width + 1);
+  }
+});
+
+test('SVG export downloads an offline map containing the root title', async ({ page }) => {
+  await page.locator('#export-menu > summary').click();
+  const [download] = await Promise.all([
+    page.waitForEvent('download'),
+    page.locator('#export-svg').click()
+  ]);
+  const content = fs.readFileSync(await download.path(), 'utf8');
+  expect(download.suggestedFilename()).toMatch(/\.svg$/);
+  expect(content).toContain('This Machine — AI Operating Model');
+  expect(content).toContain('<metadata>');
+});
+
+test('PNG export downloads a non-empty image', async ({ page }) => {
+  await page.locator('#export-menu > summary').click();
+  const [download] = await Promise.all([
+    page.waitForEvent('download'),
+    page.locator('#export-png').click()
+  ]);
+  const content = fs.readFileSync(await download.path());
+  expect(download.suggestedFilename()).toMatch(/\.png$/);
+  expect(content.length).toBeGreaterThan(1000);
+  expect(content.subarray(1, 4).toString()).toBe('PNG');
+});
+
+test('Markdown export includes nested titles even while branches are collapsed', async ({ page }) => {
+  await page.locator('#export-menu > summary').click();
+  const [download] = await Promise.all([
+    page.waitForEvent('download'),
+    page.locator('#export-md').click()
+  ]);
+  const content = fs.readFileSync(await download.path(), 'utf8');
+  expect(content).toContain('- Governance');
+  expect(content).toContain('    - E:\\MyAgent');
+  expect(content).toContain('      - Three visual presets');
+});
+
+test('JSON export includes complete map data and the view snapshot', async ({ page }) => {
+  await page.locator('#export-menu > summary').click();
+  const [download] = await Promise.all([
+    page.waitForEvent('download'),
+    page.locator('#export-json').click()
+  ]);
+  const content = JSON.parse(fs.readFileSync(await download.path(), 'utf8'));
+  expect(content.mapData.title).toBe('This Machine — AI Operating Model');
+  expect(content.mapData.children[1].children.some((item) => item.title === 'Reserve ports before binding')).toBe(true);
+  expect(content.view).toEqual(expect.objectContaining({
+    collapsed: expect.any(Object),
+    dragOffsets: expect.any(Object),
+    zoom: expect.any(Object),
+    selectedTitle: expect.any(String)
+  }));
+});
+
+test('collapse, drag, zoom, and selection state survive reload', async ({ page }) => {
+  await page.evaluate(() => {
+    window.__mindmap.toggleByTitle('Governance');
+    const state = window.__mindmap.collectState();
+    state.dragOffsets.Governance = { x: 24, y: 36 };
+    state.zoom = { x: 73, y: 41, k: 1.2 };
+    state.selectedTitle = 'Governance';
+    window.__mindmap.applyState(state);
+    window.__mindmap.saveState();
+  });
+  await page.reload();
+  await expect(page.locator('g.node.root')).toBeVisible();
+
+  const state = await page.evaluate(() => window.__mindmap.collectState());
+  expect(state.collapsed.Governance).toBe(false);
+  expect(state.dragOffsets.Governance).toEqual({ x: 24, y: 36 });
+  expect(state.zoom.k).toBeCloseTo(1.2, 5);
+  expect(state.selectedTitle).toBe('Governance');
+  await expect(page.locator('#detail-title')).toHaveText('Governance');
+});
+
+test('reset state clears persisted view state', async ({ page }) => {
+  await page.evaluate(() => {
+    window.__mindmap.toggleByTitle('Governance');
+    window.__mindmap.saveState();
+  });
+  expect(await page.evaluate(() => localStorage.getItem(window.__mindmap.STORAGE_KEY))).not.toBeNull();
+  await page.locator('#reset-state').click();
+  await page.waitForTimeout(400);
+  expect(await page.evaluate(() => localStorage.getItem(window.__mindmap.STORAGE_KEY))).toBeNull();
+});
+
+test('reset view preserves custom node drag offsets', async ({ page }) => {
+  await page.evaluate(() => {
+    const state = window.__mindmap.collectState();
+    state.dragOffsets.Governance = { x: 18, y: 27 };
+    window.__mindmap.applyState(state);
+    window.__mindmap.saveState();
+  });
+  await page.locator('#reset-view').click();
+  await page.waitForTimeout(350);
+  const offset = await page.evaluate(() => window.__mindmap.collectState().dragOffsets.Governance);
+  expect(offset).toEqual({ x: 18, y: 27 });
 });
