@@ -2,7 +2,7 @@
 
 **Project**: [sivaram311/mindmap](https://github.com/sivaram311/mindmap)  
 **Goal**: Evolve the static vanilla JS mindmap into a powerful, interactive D3.js visualization while keeping it lightweight, offline-first, and aligned with Machine AI Operating Model principles.  
-**Status**: Phase 1 in progress (July 19, 2026)  
+**Status**: Phase 2 complete (July 19, 2026)
 **Estimated Effort**: 1–2 weeks (part-time)
 
 ## Why D3.js?
@@ -46,20 +46,20 @@
 
 **Key Tasks**:
 
-- Smooth transitions and animations
-- Advanced search (highlight matches, dynamic re-layout, debounce)
-- Hover tooltips with summaries
-- Node dragging (repositioning)
-- Keyboard shortcuts (e.g., `/` for search, `+`/`-` for zoom)
-- Mobile/touch optimization (Realme P2 Pro friendly)
-- Better responsive behavior
+- [x] Smooth transitions and reduced-motion support
+- [x] Advanced search (highlight matches, dynamic re-layout, 140ms debounce, match count)
+- [x] Hover/focus tooltips with summaries
+- [x] Node dragging (repositioning with live link updates)
+- [x] Keyboard shortcuts (`/` search, `+`/`-` zoom, `0` reset, `Esc` clear)
+- [x] Mobile/touch optimization (Realme P2 Pro friendly)
+- [x] Better responsive behavior (compact three-column controls at ≤480px)
 
 **Milestone 2 – "Polished Interactive Map"** (Target: July 22–24)
 
 - Butter-smooth 60fps interactions
 - Search + filter works intuitively
 - Visual consistency with the dark theme and accents
-- **Deliverable**: Production-ready version + updated README
+- **Deliverable**: Production-ready version + updated README — **complete**
 
 ### Phase 3: Advanced Features & Extensibility
 

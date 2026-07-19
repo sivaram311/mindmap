@@ -5,7 +5,7 @@ An interactive, zero-build D3.js mind map of the workflows and standing orders f
 **Repo:** [github.com/sivaram311/mindmap](https://github.com/sivaram311/mindmap)  
 **Sandbox path:** `E:\MyWorkspace\sandbox\mindmap`  
 **Port / CSS / DB:** none — static `file://` UI only  
-**Roadmap:** [ROADMAP.md](ROADMAP.md) (Phase 1 D3 Foundation complete)
+**Roadmap:** [ROADMAP.md](ROADMAP.md) (Phase 2 Polished Interactive Map complete)
 
 ## Open
 
@@ -16,9 +16,12 @@ The map supports:
 - D3 tree layout with SVG nodes and links
 - Zoom / pan (scroll + drag) and **Reset view**
 - Collapsible branches (`_children` pattern)
-- Search across titles, descriptions, and source paths (including collapsed nodes)
+- Debounced search across titles, descriptions, and source paths (including collapsed nodes), with match count
+- Hover/focus tooltips and keyboard-operable nodes
+- Drag nodes to arrange them while links update live
+- Keyboard shortcuts: `/` search · `+`/`-` zoom · `0` reset · `Esc` clear
 - A details panel with the authoritative source path
-- Responsive desktop and mobile layouts
+- Responsive desktop, tablet, and Realme P2 Pro layouts
 
 ## Scope
 
@@ -58,4 +61,4 @@ No build step. Open the HTML file and use it.
 
 ## E2E
 
-Evidence: [`e2e/RESULTS.md`](e2e/RESULTS.md) — 27 tests × 3 viewports (Realme / desktop / tablet).
+Evidence: [`e2e/RESULTS.md`](e2e/RESULTS.md) — 39 tests across 3 viewports (Realme / desktop / tablet), including the `<500ms` initial-render target.

@@ -119,12 +119,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 365,
+                  "duration": 388,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-19T06:29:42.220Z",
+                  "startTime": "2026-07-19T06:38:30.571Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -142,12 +142,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 401,
+                  "duration": 439,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-19T06:29:47.966Z",
+                  "startTime": "2026-07-19T06:38:40.346Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -165,12 +165,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 466,
+                  "duration": 381,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-19T06:29:54.353Z",
+                  "startTime": "2026-07-19T06:38:50.425Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -181,6 +181,86 @@
           "id": "10ba7c5921614137c80b-da9494a270de9c321599",
           "file": "mindmap.spec.js",
           "line": 16,
+          "column": 1
+        },
+        {
+          "title": "initial D3 render completes within 500ms",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "realme-p2-pro-360x780",
+              "projectName": "realme-p2-pro-360x780",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 285,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-07-19T06:38:31.164Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            },
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "desktop-1280x800",
+              "projectName": "desktop-1280x800",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 288,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-07-19T06:38:40.982Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            },
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "tablet-800x1280",
+              "projectName": "tablet-800x1280",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 232,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-07-19T06:38:50.997Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "10ba7c5921614137c80b-24f16b05e7ada29a5ec8",
+          "file": "mindmap.spec.js",
+          "line": 34,
           "column": 1
         },
         {
@@ -199,12 +279,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1616,
+                  "duration": 1631,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-19T06:29:42.785Z",
+                  "startTime": "2026-07-19T06:38:31.474Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -222,12 +302,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1629,
+                  "duration": 1705,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-19T06:29:48.570Z",
+                  "startTime": "2026-07-19T06:38:41.299Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -245,12 +325,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1808,
+                  "duration": 1685,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-19T06:29:55.058Z",
+                  "startTime": "2026-07-19T06:38:51.253Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -260,7 +340,7 @@
           ],
           "id": "10ba7c5921614137c80b-2fbcde0921b979439566",
           "file": "mindmap.spec.js",
-          "line": 34,
+          "line": 40,
           "column": 1
         },
         {
@@ -279,12 +359,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 306,
+                  "duration": 450,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-19T06:29:44.424Z",
+                  "startTime": "2026-07-19T06:38:33.127Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -302,12 +382,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 334,
+                  "duration": 619,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-19T06:29:50.223Z",
+                  "startTime": "2026-07-19T06:38:43.023Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -325,12 +405,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 343,
+                  "duration": 582,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-19T06:29:56.897Z",
+                  "startTime": "2026-07-19T06:38:52.957Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -340,7 +420,7 @@
           ],
           "id": "10ba7c5921614137c80b-cbaf8e1d655e3b54e535",
           "file": "mindmap.spec.js",
-          "line": 56,
+          "line": 62,
           "column": 1
         },
         {
@@ -359,12 +439,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 216,
+                  "duration": 529,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-19T06:29:44.745Z",
+                  "startTime": "2026-07-19T06:38:33.595Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -382,12 +462,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 303,
+                  "duration": 491,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-19T06:29:50.577Z",
+                  "startTime": "2026-07-19T06:38:43.662Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -405,12 +485,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 353,
+                  "duration": 512,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-19T06:29:57.267Z",
+                  "startTime": "2026-07-19T06:38:53.559Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -420,7 +500,7 @@
           ],
           "id": "10ba7c5921614137c80b-33f4fb8a4f3beefc2ced",
           "file": "mindmap.spec.js",
-          "line": 65,
+          "line": 71,
           "column": 1
         },
         {
@@ -439,12 +519,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 573,
+                  "duration": 1303,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-19T06:29:44.975Z",
+                  "startTime": "2026-07-19T06:38:34.144Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -462,12 +542,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 683,
+                  "duration": 1360,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-19T06:29:50.901Z",
+                  "startTime": "2026-07-19T06:38:44.175Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -485,12 +565,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 695,
+                  "duration": 1349,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-19T06:29:57.645Z",
+                  "startTime": "2026-07-19T06:38:54.090Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -500,7 +580,7 @@
           ],
           "id": "10ba7c5921614137c80b-df5541046cee02f2884f",
           "file": "mindmap.spec.js",
-          "line": 70,
+          "line": 76,
           "column": 1
         },
         {
@@ -519,12 +599,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 268,
+                  "duration": 520,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-19T06:29:45.566Z",
+                  "startTime": "2026-07-19T06:38:35.468Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -542,12 +622,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 332,
+                  "duration": 511,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-19T06:29:51.606Z",
+                  "startTime": "2026-07-19T06:38:45.556Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -565,12 +645,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 365,
+                  "duration": 516,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-19T06:29:58.365Z",
+                  "startTime": "2026-07-19T06:38:55.467Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -580,7 +660,7 @@
           ],
           "id": "10ba7c5921614137c80b-cbdac0bd6394b1ab62eb",
           "file": "mindmap.spec.js",
-          "line": 81,
+          "line": 87,
           "column": 1
         },
         {
@@ -599,12 +679,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 440,
+                  "duration": 371,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-19T06:29:45.854Z",
+                  "startTime": "2026-07-19T06:38:36.008Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -622,12 +702,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 407,
+                  "duration": 359,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-19T06:29:51.961Z",
+                  "startTime": "2026-07-19T06:38:46.088Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -645,12 +725,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 456,
+                  "duration": 307,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-19T06:29:58.755Z",
+                  "startTime": "2026-07-19T06:38:56.001Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -660,7 +740,7 @@
           ],
           "id": "10ba7c5921614137c80b-1793ae53a7bbaf503cb1",
           "file": "mindmap.spec.js",
-          "line": 87,
+          "line": 93,
           "column": 1
         },
         {
@@ -679,12 +759,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 618,
+                  "duration": 450,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-19T06:29:46.320Z",
+                  "startTime": "2026-07-19T06:38:36.397Z",
                   "annotations": [],
                   "attachments": [
                     {
@@ -708,12 +788,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 731,
+                  "duration": 496,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-19T06:29:52.393Z",
+                  "startTime": "2026-07-19T06:38:46.464Z",
                   "annotations": [],
                   "attachments": [
                     {
@@ -737,12 +817,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 661,
+                  "duration": 376,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-19T06:29:59.234Z",
+                  "startTime": "2026-07-19T06:38:56.324Z",
                   "annotations": [],
                   "attachments": [
                     {
@@ -758,7 +838,7 @@
           ],
           "id": "10ba7c5921614137c80b-0b0f66080a6c79492486",
           "file": "mindmap.spec.js",
-          "line": 96,
+          "line": 102,
           "column": 1
         },
         {
@@ -777,12 +857,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 338,
+                  "duration": 322,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-19T06:29:46.960Z",
+                  "startTime": "2026-07-19T06:38:36.867Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -800,12 +880,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 382,
+                  "duration": 316,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-19T06:29:53.148Z",
+                  "startTime": "2026-07-19T06:38:46.976Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -823,12 +903,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 387,
+                  "duration": 299,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-19T06:29:59.915Z",
+                  "startTime": "2026-07-19T06:38:56.717Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -838,7 +918,247 @@
           ],
           "id": "10ba7c5921614137c80b-7c4a2861a84b40684632",
           "file": "mindmap.spec.js",
-          "line": 120,
+          "line": 126,
+          "column": 1
+        },
+        {
+          "title": "hover tooltip shows node title and summary",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "realme-p2-pro-360x780",
+              "projectName": "realme-p2-pro-360x780",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 750,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-07-19T06:38:37.206Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            },
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "desktop-1280x800",
+              "projectName": "desktop-1280x800",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 729,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-07-19T06:38:47.308Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            },
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "tablet-800x1280",
+              "projectName": "tablet-800x1280",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 718,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-07-19T06:38:57.033Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "10ba7c5921614137c80b-e7c8faad40b44204233d",
+          "file": "mindmap.spec.js",
+          "line": 132,
+          "column": 1
+        },
+        {
+          "title": "keyboard shortcuts focus search, clear it, and zoom",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "realme-p2-pro-360x780",
+              "projectName": "realme-p2-pro-360x780",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 937,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-07-19T06:38:37.973Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            },
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "desktop-1280x800",
+              "projectName": "desktop-1280x800",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 909,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-07-19T06:38:48.057Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            },
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "tablet-800x1280",
+              "projectName": "tablet-800x1280",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 975,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-07-19T06:38:57.773Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "10ba7c5921614137c80b-c7204d065ef8c6054602",
+          "file": "mindmap.spec.js",
+          "line": 142,
+          "column": 1
+        },
+        {
+          "title": "node drag records a custom offset and keeps links rendered",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "realme-p2-pro-360x780",
+              "projectName": "realme-p2-pro-360x780",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 771,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-07-19T06:38:38.922Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            },
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "desktop-1280x800",
+              "projectName": "desktop-1280x800",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 774,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-07-19T06:38:48.980Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            },
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "tablet-800x1280",
+              "projectName": "tablet-800x1280",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 804,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-07-19T06:38:58.765Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "10ba7c5921614137c80b-77a009700aeca1fe2610",
+          "file": "mindmap.spec.js",
+          "line": 161,
           "column": 1
         }
       ]
@@ -846,9 +1166,9 @@
   ],
   "errors": [],
   "stats": {
-    "startTime": "2026-07-19T06:29:41.399Z",
-    "duration": 19068.615999999998,
-    "expected": 27,
+    "startTime": "2026-07-19T06:38:29.776Z",
+    "duration": 29923.635,
+    "expected": 39,
     "skipped": 0,
     "unexpected": 0,
     "flaky": 0

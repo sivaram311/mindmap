@@ -75,9 +75,17 @@
       justify-content: flex-end;
     }
 
+    .search-wrap {
+      position: relative;
+      display: flex;
+      align-items: center;
+      flex: 1 1 17rem;
+    }
+
     .search {
-      width: min(19rem, 42vw);
+      width: 100%;
       padding: 0.62rem 0.8rem;
+      padding-right: 3.8rem;
       color: var(--text);
       border: 1px solid var(--line);
       border-radius: 0.65rem;
@@ -90,7 +98,16 @@
       box-shadow: 0 0 0 3px rgba(98, 217, 255, 0.12);
     }
 
+    .search-count {
+      position: absolute;
+      right: 0.75rem;
+      color: var(--muted);
+      font-size: 0.72rem;
+      pointer-events: none;
+    }
+
     .control {
+      min-height: 2.55rem;
       padding: 0.58rem 0.78rem;
       border: 1px solid var(--line);
       border-radius: 0.65rem;
@@ -137,12 +154,22 @@
 
     .node {
       cursor: pointer;
+      outline: none;
+    }
+
+    .node text {
+      pointer-events: none;
+    }
+
+    .node-hit {
+      pointer-events: all;
     }
 
     .node-card {
       fill: #0f2238;
       stroke-width: 1.5;
       filter: drop-shadow(0 8px 18px rgba(0, 0, 0, 0.28));
+      transition: filter 160ms ease, stroke-width 160ms ease;
     }
 
     .node.root .node-card {
@@ -156,6 +183,17 @@
 
     .node.match .node-card {
       stroke-width: 2.25;
+    }
+
+    .node:hover .node-card,
+    .node:focus .node-card {
+      stroke-width: 2.3;
+      filter: drop-shadow(0 12px 24px rgba(98, 217, 255, 0.22));
+    }
+
+    .node.dragging .node-card {
+      stroke-width: 3;
+      filter: drop-shadow(0 15px 28px rgba(155, 140, 255, 0.28));
     }
 
     .node-title {
@@ -199,6 +237,38 @@
       background: rgba(8, 19, 34, 0.78);
       font-size: 0.72rem;
       pointer-events: none;
+    }
+
+    .tooltip {
+      position: fixed;
+      z-index: 30;
+      width: min(19rem, calc(100vw - 2rem));
+      padding: 0.72rem 0.82rem;
+      color: var(--text);
+      border: 1px solid var(--line);
+      border-radius: 0.7rem;
+      background: rgba(8, 19, 34, 0.96);
+      box-shadow: var(--shadow);
+      opacity: 0;
+      transform: translateY(4px);
+      transition: opacity 120ms ease, transform 120ms ease;
+      pointer-events: none;
+    }
+
+    .tooltip.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .tooltip strong {
+      display: block;
+      margin-bottom: 0.2rem;
+      color: var(--accent);
+    }
+
+    .tooltip span {
+      color: var(--muted);
+      font-size: 0.8rem;
     }
 
     .no-results {
@@ -284,7 +354,7 @@
     @media (max-width: 900px) {
       header { align-items: flex-start; flex-direction: column; }
       .toolbar { justify-content: flex-start; width: 100%; }
-      .search { flex: 1; width: auto; min-width: 10rem; }
+      .search-wrap { flex: 1 1 100%; width: 100%; }
       main { grid-template-columns: 1fr; }
       #map { height: 60vh; min-height: 22rem; }
       aside {
@@ -294,6 +364,15 @@
         border-top: 1px solid rgba(159, 179, 200, 0.18);
         border-left: 0;
       }
+    }
+
+    @media (max-width: 480px) {
+      header { padding: 0.8rem; }
+      .toolbar { display: grid; grid-template-columns: repeat(3, 1fr); }
+      .search-wrap { grid-column: 1 / -1; }
+      .control { padding-inline: 0.35rem; font-size: 0.76rem; }
+      #map { height: 58vh; min-height: 21rem; }
+      .hint { right: 0.75rem; left: 0.75rem; text-align: center; }
     }
 
     @media (prefers-reduced-motion: reduce) {
@@ -309,10 +388,13 @@
         <p>D3 living awareness map · source files remain authoritative</p>
       </div>
       <div class="toolbar">
-        <input id="search" class="search" type="search" placeholder="Search rules, roles, paths…" aria-label="Search mind map">
+        <label class="search-wrap">
+          <input id="search" class="search" type="search" placeholder="Search rules, roles, paths…  (/)" aria-label="Search mind map" aria-keyshortcuts="/">
+          <span id="search-count" class="search-count" aria-live="polite"></span>
+        </label>
         <button id="expand" class="control" type="button">Expand all</button>
         <button id="collapse" class="control" type="button">Collapse branches</button>
-        <button id="reset-view" class="control" type="button">Reset view</button>
+        <button id="reset-view" class="control" type="button" aria-keyshortcuts="0">Reset view</button>
       </div>
     </header>
 
@@ -320,7 +402,7 @@
       <section class="map-shell" aria-label="Mind map">
         <div id="map" class="map" role="img" aria-label="Hierarchical operating model tree"></div>
         <p id="no-results" class="no-results">No matching nodes. Try a rule name, role, environment, or file path.</p>
-        <div class="hint">Scroll to zoom · drag to pan · click node to select / toggle</div>
+        <div class="hint">Scroll / pinch to zoom · drag canvas to pan · drag nodes to arrange · press / to search</div>
       </section>
 
       <aside aria-live="polite">
@@ -342,6 +424,7 @@
       </aside>
     </main>
   </div>
+  <div id="tooltip" class="tooltip" role="tooltip" aria-hidden="true"></div>
 
   <script src="vendor/d3.v7.min.js"></script>
   <script>
@@ -504,11 +587,15 @@
 
     const mapEl = document.querySelector("#map");
     const search = document.querySelector("#search");
+    const searchCount = document.querySelector("#search-count");
     const noResults = document.querySelector("#no-results");
     const detailTitle = document.querySelector("#detail-title");
     const detailText = document.querySelector("#detail-text");
     const detailSource = document.querySelector("#detail-source");
     const copyButton = document.querySelector("#copy");
+    const tooltip = document.querySelector("#tooltip");
+    const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const transitionMs = prefersReducedMotion ? 0 : 280;
 
     const root = d3.hierarchy(mapData);
     root.x0 = 0;
@@ -525,6 +612,8 @@
 
     let selectedId = root.id;
     let searchQuery = "";
+    let searchTimer = null;
+    let dragged = false;
 
     const svg = d3.select("#map").append("svg")
       .attr("aria-hidden", "false");
@@ -545,6 +634,49 @@
     svg.call(zoom);
 
     const tree = d3.tree().nodeSize([DX, DY]);
+
+    function position(d) {
+      return {
+        x: d.x + (d._dragX || 0),
+        y: d.y + (d._dragY || 0)
+      };
+    }
+
+    function nodeTransform(d) {
+      const p = position(d);
+      return `translate(${p.y},${p.x})`;
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;");
+    }
+
+    function placeTooltip(event) {
+      const margin = 14;
+      const rect = tooltip.getBoundingClientRect();
+      let left = event.clientX + 14;
+      let top = event.clientY + 14;
+      if (left + rect.width > window.innerWidth - margin) left = event.clientX - rect.width - 14;
+      if (top + rect.height > window.innerHeight - margin) top = event.clientY - rect.height - 14;
+      tooltip.style.left = `${Math.max(margin, left)}px`;
+      tooltip.style.top = `${Math.max(margin, top)}px`;
+    }
+
+    function showTooltip(event, d) {
+      tooltip.innerHTML = `<strong>${escapeHtml(d.data.title)}</strong><span>${escapeHtml(d.data.summary || d.data.detail || "")}</span>`;
+      tooltip.setAttribute("aria-hidden", "false");
+      tooltip.classList.add("visible");
+      placeTooltip(event);
+    }
+
+    function hideTooltip() {
+      tooltip.classList.remove("visible");
+      tooltip.setAttribute("aria-hidden", "true");
+    }
 
     function searchText(d) {
       const n = d.data;
@@ -641,8 +773,30 @@
     }
 
     function diagonal(s, d) {
-      return `M${s.y},${s.x}C${(s.y + d.y) / 2},${s.x} ${(s.y + d.y) / 2},${d.x} ${d.y},${d.x}`;
+      const start = position(s);
+      const end = position(d);
+      return `M${start.y},${start.x}C${(start.y + end.y) / 2},${start.x} ${(start.y + end.y) / 2},${end.x} ${end.y},${end.x}`;
     }
+
+    const nodeDrag = d3.drag()
+      .clickDistance(5)
+      .on("start", function(event, d) {
+        dragged = false;
+        hideTooltip();
+        d3.select(this.parentNode).classed("dragging", true).raise();
+        event.sourceEvent?.stopPropagation();
+      })
+      .on("drag", function(event, d) {
+        dragged = true;
+        d._dragY = (d._dragY || 0) + event.dx;
+        d._dragX = (d._dragX || 0) + event.dy;
+        d3.select(this.parentNode).attr("transform", nodeTransform(d));
+        gLinks.selectAll("path.link").attr("d", (link) => diagonal(link.source, link.target));
+      })
+      .on("end", function() {
+        d3.select(this.parentNode).classed("dragging", false);
+        window.setTimeout(() => { dragged = false; }, 0);
+      });
 
     function update(source) {
       const matchIds = collectMatchIds(searchQuery);
@@ -667,9 +821,9 @@
             const o = { x: source.x0 ?? source.x, y: source.y0 ?? source.y };
             return diagonal(o, o);
           })
-          .call((enter) => enter.transition().duration(280).attr("d", (d) => diagonal(d.source, d.target))),
-        (updateSel) => updateSel.transition().duration(280).attr("d", (d) => diagonal(d.source, d.target)),
-        (exit) => exit.transition().duration(220)
+          .call((enter) => enter.transition().duration(transitionMs).attr("d", (d) => diagonal(d.source, d.target))),
+        (updateSel) => updateSel.transition().duration(transitionMs).attr("d", (d) => diagonal(d.source, d.target)),
+        (exit) => exit.transition().duration(transitionMs)
           .attr("d", () => {
             const o = { x: source.x, y: source.y };
             return diagonal(o, o);
@@ -684,9 +838,30 @@
         .attr("class", (d) => `node${d.depth === 0 ? " root" : ""}`)
         .attr("data-title", (d) => d.data.title)
         .attr("data-depth", (d) => d.depth)
+        .attr("role", "button")
+        .attr("tabindex", 0)
+        .attr("aria-label", (d) => `${d.data.title}. ${d.data.summary || ""}`)
         .attr("transform", () => `translate(${source.y0 ?? source.y},${source.x0 ?? source.x})`)
         .on("click", (event, d) => {
           event.stopPropagation();
+          if (dragged) return;
+          selectNode(d);
+          if (d.children || d._children) toggleNode(d);
+        })
+        .on("mouseenter", (event, d) => showTooltip(event, d))
+        .on("mousemove", (event) => placeTooltip(event))
+        .on("mouseleave", hideTooltip)
+        .on("pointerenter", (event, d) => showTooltip(event, d))
+        .on("pointermove", (event) => placeTooltip(event))
+        .on("pointerleave", hideTooltip)
+        .on("focus", (event, d) => {
+          const rect = event.currentTarget.getBoundingClientRect();
+          showTooltip({ clientX: rect.right, clientY: rect.top }, d);
+        })
+        .on("blur", hideTooltip)
+        .on("keydown", (event, d) => {
+          if (event.key !== "Enter" && event.key !== " ") return;
+          event.preventDefault();
           selectNode(d);
           if (d.children || d._children) toggleNode(d);
         });
@@ -731,6 +906,8 @@
         .attr("x", NODE_W - 30)
         .attr("y", 0);
 
+      nodeEnter.select(".node-hit").call(nodeDrag);
+
       const nodeMerge = nodeEnter.merge(node);
 
       nodeMerge
@@ -738,8 +915,8 @@
         .classed("root", (d) => d.depth === 0)
         .classed("active", (d) => d.id === selectedId)
         .classed("match", (d) => !!searchQuery && nodeMatches(d, searchQuery))
-        .transition().duration(280)
-        .attr("transform", (d) => `translate(${d.y},${d.x})`);
+        .transition().duration(transitionMs)
+        .attr("transform", nodeTransform);
 
       nodeMerge.select(".node-card")
         .attr("stroke", (d) => d._color);
@@ -760,7 +937,7 @@
       // Style mark tspans (SVG uses fill, not HTML mark)
       nodeMerge.selectAll("tspan.mark").attr("fill", "#ffe08a").attr("font-weight", 800);
 
-      node.exit().transition().duration(220)
+      node.exit().transition().duration(transitionMs)
         .attr("transform", () => `translate(${source.y},${source.x})`)
         .remove();
 
@@ -782,7 +959,7 @@
       );
       const tx = (width - fullWidth * scale) / 2 - bounds.x * scale;
       const ty = (height - fullHeight * scale) / 2 - bounds.y * scale;
-      svg.transition().duration(280).call(zoom.transform, d3.zoomIdentity.translate(tx, ty).scale(scale));
+      svg.transition().duration(transitionMs).call(zoom.transform, d3.zoomIdentity.translate(tx, ty).scale(scale));
     }
 
     function centerOn(d) {
@@ -791,11 +968,18 @@
       const scale = 0.95;
       const tx = width / 2 - d.y * scale - NODE_W / 3;
       const ty = height / 2 - d.x * scale;
-      svg.transition().duration(280).call(zoom.transform, d3.zoomIdentity.translate(tx, ty).scale(scale));
+      svg.transition().duration(transitionMs).call(zoom.transform, d3.zoomIdentity.translate(tx, ty).scale(scale));
     }
 
     function applySearch() {
       searchQuery = search.value.trim().toLowerCase();
+      let matchTotal = 0;
+      if (searchQuery) {
+        walkAll(root, (d) => {
+          if (nodeMatches(d, searchQuery)) matchTotal += 1;
+        });
+      }
+      searchCount.textContent = searchQuery ? `${matchTotal} match${matchTotal === 1 ? "" : "es"}` : "";
       if (searchQuery) expandAncestorsForMatches(searchQuery);
       else {
         // restore default collapsed branches when clearing search
@@ -811,26 +995,63 @@
         }
       }
       update(root);
-      if (searchQuery) fitView();
+      window.setTimeout(() => fitView(), transitionMs + 20);
     }
 
-    search.addEventListener("input", applySearch);
+    function queueSearch() {
+      window.clearTimeout(searchTimer);
+      searchTimer = window.setTimeout(applySearch, 140);
+    }
+
+    function zoomBy(factor) {
+      svg.transition().duration(transitionMs).call(zoom.scaleBy, factor);
+    }
+
+    search.addEventListener("input", queueSearch);
     document.querySelector("#expand").addEventListener("click", () => {
       setExpanded(true);
-      window.setTimeout(() => fitView(), 300);
+      window.setTimeout(() => fitView(), transitionMs + 20);
     });
     document.querySelector("#collapse").addEventListener("click", () => {
       search.value = "";
       searchQuery = "";
+      searchCount.textContent = "";
       setExpanded(false);
-      window.setTimeout(() => fitView(), 300);
+      window.setTimeout(() => fitView(), transitionMs + 20);
     });
     document.querySelector("#reset-view").addEventListener("click", () => fitView());
+
+    document.addEventListener("keydown", (event) => {
+      const typing = event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement;
+      if (event.key === "/" && !typing) {
+        event.preventDefault();
+        search.focus();
+        search.select();
+      } else if (event.key === "Escape") {
+        hideTooltip();
+        if (document.activeElement === search || search.value) {
+          search.value = "";
+          applySearch();
+          search.blur();
+        }
+      } else if (!typing && (event.key === "+" || event.key === "=")) {
+        event.preventDefault();
+        zoomBy(1.25);
+      } else if (!typing && event.key === "-") {
+        event.preventDefault();
+        zoomBy(0.8);
+      } else if (!typing && event.key === "0") {
+        event.preventDefault();
+        fitView();
+      }
+    });
 
     // Expose helpers for E2E / debugging without a build step.
     window.__mindmap = {
       fitView,
       centerOn,
+      applySearch,
+      zoomBy,
       toggleByTitle(title) {
         let found = null;
         walkAll(root, (d) => {
@@ -876,6 +1097,7 @@
 
     selectNode(root);
     update(root);
+    window.__mindmap.readyAt = performance.now();
     window.requestAnimationFrame(fitView);
     window.addEventListener("resize", () => fitView());
   </script>

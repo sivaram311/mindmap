@@ -31,6 +31,12 @@ test('initial rendering: root, five branches, collapsed children, default detail
   await expect(page.locator('#no-results')).toBeHidden();
 });
 
+test('initial D3 render completes within 500ms', async ({ page }) => {
+  const readyAt = await page.evaluate(() => window.__mindmap.readyAt);
+  expect(readyAt).toBeGreaterThan(0);
+  expect(readyAt).toBeLessThan(500);
+});
+
 test('branch expand/collapse via node click and toolbar buttons', async ({ page }) => {
   const govChild = node(page, 'All AI providers');
 
@@ -121,4 +127,55 @@ test('zoom layer exists and reset view keeps the tree visible', async ({ page })
   await expect(page.locator('#map svg g.zoom-layer')).toBeVisible();
   await page.locator('#reset-view').click();
   await expect(page.locator('g.node.root')).toBeVisible();
+});
+
+test('hover tooltip shows node title and summary', async ({ page }) => {
+  await page.evaluate(() => window.__mindmap.selectByTitle('Governance'));
+  await page.waitForTimeout(400);
+  const governance = node(page, 'Governance');
+  await governance.locator('.node-hit').hover();
+  await expect(page.locator('#tooltip')).toHaveClass(/visible/);
+  await expect(page.locator('#tooltip')).toContainText('Governance');
+  await expect(page.locator('#tooltip')).toContainText('Authority, scope');
+});
+
+test('keyboard shortcuts focus search, clear it, and zoom', async ({ page }) => {
+  await page.keyboard.press('/');
+  await expect(page.locator('#search')).toBeFocused();
+
+  await page.keyboard.type('ports');
+  await expect(page.locator('#search-count')).toContainText('match');
+  await expect(node(page, 'Reserve ports before binding')).toBeVisible();
+
+  await page.keyboard.press('Escape');
+  await expect(page.locator('#search')).toHaveValue('');
+  await expect(page.locator('#search-count')).toHaveText('');
+
+  const before = await page.locator('.zoom-layer').getAttribute('transform');
+  await page.keyboard.press('+');
+  await page.waitForTimeout(350);
+  const after = await page.locator('.zoom-layer').getAttribute('transform');
+  expect(after).not.toBe(before);
+});
+
+test('node drag records a custom offset and keeps links rendered', async ({ page }) => {
+  await page.evaluate(() => window.__mindmap.selectByTitle('Governance'));
+  await page.waitForTimeout(400);
+  const target = node(page, 'Governance');
+  const box = await target.locator('.node-hit').boundingBox();
+  expect(box).not.toBeNull();
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(box.x + box.width / 2 + 36, box.y + box.height / 2 + 24, { steps: 5 });
+  await page.mouse.up();
+
+  const result = await target.evaluate((el) => {
+    const datum = window.d3.select(el).datum();
+    return { dragX: datum._dragX, dragY: datum._dragY };
+  });
+
+  expect(Math.abs(result.dragX)).toBeGreaterThan(5);
+  expect(Math.abs(result.dragY)).toBeGreaterThan(5);
+  await expect(node(page, 'Governance')).toHaveAttribute('transform', /translate\(/);
+  await expect(page.locator('path.link').first()).toBeVisible();
 });
