@@ -5,7 +5,7 @@ An interactive, zero-build D3.js mind map of the workflows and standing orders f
 **Repo:** [github.com/sivaram311/mindmap](https://github.com/sivaram311/mindmap)  
 **Sandbox path:** `E:\MyWorkspace\sandbox\mindmap`  
 **Port / CSS / DB:** none — static `file://` UI only  
-**Roadmap:** [ROADMAP.md](ROADMAP.md) (Phase 2 complete · [Phase 3–4 plan](PHASE-3-PLAN.md) ready)
+**Roadmap:** [ROADMAP.md](ROADMAP.md) (Phase 2 complete · Phase 3 Workstream C complete)
 
 ## Open
 
@@ -23,6 +23,8 @@ The map supports:
 - Offline SVG, PNG, Markdown outline, and JSON exports (including collapsed map data)
 - Local persistence for collapse state, node positions, zoom, and selection, with separate **Reset state** and **Reset view** controls
 - Keyboard shortcuts: `/` search · `+`/`-` zoom · `0` reset · `Esc` clear
+- Optional editing for node title, summary, detail, color, and source, including add/delete
+- Accessible ARIA tree semantics with roving focus and arrow/Home/End navigation
 - A details panel with the authoritative source path
 - Responsive desktop, tablet, and Realme P2 Pro layouts
 
@@ -62,6 +64,23 @@ When a standing order changes, update its node in the `mapData` object inside `i
 
 No build step. Open the HTML file and use it.
 
+## Data schema and persistence integration
+
+The editable tree schema is versioned by `MAP_SCHEMA_VERSION` in `index.html`
+(currently `1`). A snapshot envelope contains `{ schemaVersion, tree }`; loaders
+must migrate older snapshots before rendering and reject unsupported newer
+versions. See [CONTRIBUTING.md](CONTRIBUTING.md) for the node shape.
+
+Editing remains functional without persistence. When Workstream A's state store
+is present, tree changes call `window.__mindmap.saveState` (or
+`window.saveState`) with the versioned tree payload and emit
+`mindmap:treechange`. The integrated state envelope must restore that tree
+before constructing the D3 hierarchy; no second local-storage path is used.
+
 ## E2E
 
 Evidence: [`e2e/RESULTS.md`](e2e/RESULTS.md) — 39 tests across 3 viewports (Realme / desktop / tablet), including the `<500ms` initial-render target.
+
+Playwright is a machine-wide serialized resource. Keep `workers: 1` and
+`fullyParallel: false`; never use a parallel project matrix against the single
+runner slot. Claim and release the slot around every browser run.

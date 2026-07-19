@@ -2,7 +2,7 @@
 
 **Project**: [sivaram311/mindmap](https://github.com/sivaram311/mindmap)  
 **Goal**: Evolve the static vanilla JS mindmap into a powerful, interactive D3.js visualization while keeping it lightweight, offline-first, and aligned with Machine AI Operating Model principles.  
-**Status**: Phase 2 complete · Phase 3–4 **planned** (July 19, 2026) — see [PHASE-3-PLAN.md](PHASE-3-PLAN.md)
+**Status**: Phase 2 complete · Phase 3 Workstream C and initial Phase 4 docs complete (July 19, 2026) — see [PHASE-3-PLAN.md](PHASE-3-PLAN.md)
 **Estimated Effort**: 1–2 weeks (part-time)
 
 ## Why D3.js?
@@ -73,8 +73,8 @@
 - [ ] **A** LocalStorage persistence + `#reset-state` (distinct from `#reset-view`)
 - [ ] **B** Layout modes: horizontal (default) + radial; optional cluster; **defer force-directed**
 - [ ] **B** Viewport culling / transition throttling for 200+ nodes
-- [ ] **C** Inline editing mode (add / edit / delete; color + source)
-- [ ] **C** ARIA tree + arrow-key navigation
+- [x] **C** Inline editing mode (add / edit / delete; color + source)
+- [x] **C** ARIA tree + arrow-key navigation
 - [ ] Integration hooks for live markdown sources (later)
 - [ ] Playwright coverage for A/B/C (serialized runner, CONSCIOUS #15)
 
@@ -93,10 +93,10 @@
 
 **Key Tasks**:
 
-- [ ] Expand README; add `CONTRIBUTING.md`
-- [ ] `MAP_SCHEMA_VERSION` + migrate-on-load
-- [ ] `.github/ISSUE_TEMPLATE/` (bug + feature)
-- [ ] CI note: Playwright `workers: 1` only; never parallel matrix vs machine slot
+- [x] Expand README; add `CONTRIBUTING.md`
+- [x] `MAP_SCHEMA_VERSION` contract and migration requirement for the A-owned loader
+- [x] `.github/ISSUE_TEMPLATE/` (bug + feature)
+- [x] CI note: Playwright `workers: 1` only; never parallel matrix vs machine slot
 - [ ] Optional later: Web Component wrapper; visual regression goldens
 
 **Milestone 4 – "Mature & Maintainable"** (Target: End of July 2026)

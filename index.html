@@ -33,7 +33,7 @@
       font: 15px/1.5 Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     }
 
-    button, input { font: inherit; }
+    button, input, textarea { font: inherit; }
     button { color: inherit; }
 
     .app {
@@ -390,6 +390,50 @@
       cursor: pointer;
     }
 
+    .edit-form {
+      display: grid;
+      gap: 0.7rem;
+      margin-top: 1.4rem;
+      padding-top: 1.2rem;
+      border-top: 1px solid var(--line);
+    }
+
+    .edit-form[hidden] { display: none; }
+
+    .edit-form label {
+      display: grid;
+      gap: 0.25rem;
+      color: var(--muted);
+      font-size: 0.76rem;
+      font-weight: 700;
+    }
+
+    .edit-form input,
+    .edit-form textarea {
+      width: 100%;
+      padding: 0.55rem 0.65rem;
+      color: var(--text);
+      border: 1px solid var(--line);
+      border-radius: 0.55rem;
+      outline: none;
+      background: var(--panel);
+      resize: vertical;
+    }
+
+    .edit-form input:focus,
+    .edit-form textarea:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(98, 217, 255, 0.12);
+    }
+
+    .edit-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .edit-actions .danger { border-color: var(--danger); }
+
     .legend {
       display: grid;
       gap: 0.45rem;
@@ -476,12 +520,13 @@
             <option value="cluster">Cluster</option>
           </select>
         </label>
+        <button id="edit-mode" class="control" type="button" aria-pressed="false">Edit</button>
       </div>
     </header>
 
     <main>
       <section class="map-shell" aria-label="Mind map">
-        <div id="map" class="map" role="img" aria-label="Hierarchical operating model tree"></div>
+        <div id="map" class="map" role="tree" aria-label="Hierarchical operating model tree"></div>
         <p id="no-results" class="no-results">No matching nodes. Try a rule name, role, environment, or file path.</p>
         <div class="hint">Scroll / pinch to zoom · drag canvas to pan · drag nodes to arrange · press / to search</div>
       </section>
@@ -495,6 +540,19 @@
           <code id="detail-source">E:\MyAgent\workflow\CONSCIOUS.md</code>
           <button id="copy" class="copy" type="button">Copy path</button>
         </div>
+        <form id="edit-form" class="edit-form" hidden>
+          <span class="eyebrow">Edit selected node</span>
+          <label>Title <input id="edit-title" name="title" required></label>
+          <label>Summary <textarea id="edit-summary" name="summary" rows="2"></textarea></label>
+          <label>Detail <textarea id="edit-detail" name="detail" rows="4"></textarea></label>
+          <label>Color <input id="edit-color" name="color" type="color" value="#62d9ff"></label>
+          <label>Source <input id="edit-source" name="source"></label>
+          <div class="edit-actions">
+            <button id="save-node" class="control" type="submit">Save node</button>
+            <button id="add-child" class="control" type="button">Add child</button>
+            <button id="delete-node" class="control danger" type="button">Delete node</button>
+          </div>
+        </form>
         <div class="legend">
           <span style="color:#62d9ff"><i class="dot"></i>Governance</span>
           <span style="color:#ff7b8c"><i class="dot"></i>Standing rules</span>
@@ -509,6 +567,7 @@
 
   <script src="vendor/d3.v7.min.js"></script>
   <script>
+    const MAP_SCHEMA_VERSION = 1;
     const SOURCES = {
       conscious: "E:\\MyAgent\\workflow\\CONSCIOUS.md",
       agents: "E:\\MyAgent\\AGENTS.md",
@@ -670,6 +729,21 @@
     const LAYOUT_MODES = ["horizontal", "radial", "cluster"];
     const PERF_NODE_LIMIT = 200;
 
+    // Hydrate edited tree from LocalStorage before building the D3 hierarchy.
+    try {
+      const rawBoot = window.localStorage.getItem(STORAGE_KEY);
+      if (rawBoot) {
+        const bootState = JSON.parse(rawBoot);
+        if (bootState && bootState.tree && typeof bootState.tree === "object"
+            && (!bootState.schemaVersion || bootState.schemaVersion <= MAP_SCHEMA_VERSION)) {
+          Object.keys(mapData).forEach((key) => { delete mapData[key]; });
+          Object.assign(mapData, bootState.tree);
+        }
+      }
+    } catch {
+      /* ignore corrupt / blocked storage */
+    }
+
     const mapEl = document.querySelector("#map");
     const search = document.querySelector("#search");
     const searchCount = document.querySelector("#search-count");
@@ -678,6 +752,14 @@
     const detailText = document.querySelector("#detail-text");
     const detailSource = document.querySelector("#detail-source");
     const copyButton = document.querySelector("#copy");
+    const editModeButton = document.querySelector("#edit-mode");
+    const editForm = document.querySelector("#edit-form");
+    const editTitle = document.querySelector("#edit-title");
+    const editSummary = document.querySelector("#edit-summary");
+    const editDetail = document.querySelector("#edit-detail");
+    const editColor = document.querySelector("#edit-color");
+    const editSource = document.querySelector("#edit-source");
+    const deleteNodeButton = document.querySelector("#delete-node");
     const tooltip = document.querySelector("#tooltip");
     const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const transitionMs = prefersReducedMotion ? 0 : 280;
@@ -695,7 +777,11 @@
       }
     });
 
+    let nextNodeId = root.descendants().length;
     let selectedId = root.id;
+    let focusedId = root.id;
+    let pendingFocusId = null;
+    let editMode = false;
     let searchQuery = "";
     let searchTimer = null;
     let dragged = false;
@@ -843,6 +929,14 @@
       return found;
     }
 
+    function findNodeById(id) {
+      let found = null;
+      walkAll(root, (d) => {
+        if (d.id === id) found = d;
+      });
+      return found;
+    }
+
     function collectState() {
       const collapsed = {};
       const dragOffsets = {};
@@ -861,6 +955,8 @@
         if (d.id === selectedId) selected = d;
       });
       return {
+        schemaVersion: MAP_SCHEMA_VERSION,
+        tree: treeSnapshot(),
         collapsed,
         dragOffsets,
         zoom: { x: transform.x, y: transform.y, k: transform.k },
@@ -1088,6 +1184,39 @@
       return content;
     }
 
+    function selectedNode() {
+      return findNodeById(selectedId) || root;
+    }
+
+    function treeSnapshot() {
+      return JSON.parse(JSON.stringify(mapData));
+    }
+
+    function notifyTreeChanged() {
+      const detail = { schemaVersion: MAP_SCHEMA_VERSION, tree: treeSnapshot() };
+      // Workstream A integration: persist edited tree inside the LocalStorage envelope.
+      try {
+        const base = collectState();
+        base.schemaVersion = detail.schemaVersion;
+        base.tree = detail.tree;
+        window.localStorage.setItem(STORAGE_KEY, JSON.stringify(base));
+      } catch {
+        /* file:// privacy / quota */
+      }
+      window.dispatchEvent(new CustomEvent("mindmap:treechange", { detail }));
+    }
+
+    function syncEditForm(d) {
+      editTitle.value = d.data.title || "";
+      editSummary.value = d.data.summary || "";
+      editDetail.value = d.data.detail || "";
+      editColor.value = /^#[0-9a-f]{6}$/i.test(d.data.color || d._color || "")
+        ? (d.data.color || d._color)
+        : "#62d9ff";
+      editSource.value = d.data.source || "";
+      deleteNodeButton.disabled = d === root;
+    }
+
     function highlightText(text, query) {
       if (!query) return text;
       const index = text.toLowerCase().indexOf(query);
@@ -1159,6 +1288,8 @@
       detailText.textContent = d.data.detail || d.data.summary || "";
       detailSource.textContent = d.data.source || "No direct source";
       gNodes.selectAll("g.node").classed("active", (n) => n.id === selectedId);
+      gNodes.selectAll("g.node").attr("aria-selected", (n) => String(n.id === selectedId));
+      syncEditForm(d);
       saveState();
     }
 
@@ -1172,6 +1303,85 @@
       }
       update(d);
       saveState();
+    }
+
+    function setEditMode(enabled) {
+      editMode = Boolean(enabled);
+      editModeButton.setAttribute("aria-pressed", String(editMode));
+      editModeButton.textContent = editMode ? "Done editing" : "Edit";
+      editForm.hidden = !editMode;
+      if (editMode) syncEditForm(selectedNode());
+      return editMode;
+    }
+
+    function updateNode(d, changes) {
+      if (!d) return false;
+      ["title", "summary", "detail", "source"].forEach((key) => {
+        if (Object.hasOwn(changes, key)) d.data[key] = String(changes[key]).trim();
+      });
+      if (Object.hasOwn(changes, "color") && /^#[0-9a-f]{6}$/i.test(changes.color)) {
+        d.data.color = changes.color;
+        d._color = changes.color;
+      }
+      selectNode(d);
+      update(d);
+      notifyTreeChanged();
+      return true;
+    }
+
+    function addChild(parent, childData = {}) {
+      if (!parent) return null;
+      const data = {
+        title: String(childData.title || "New node"),
+        icon: String(childData.icon || "·"),
+        summary: String(childData.summary || ""),
+        detail: String(childData.detail || ""),
+        source: String(childData.source || ""),
+        color: childData.color || parent._color
+      };
+      parent.data.children ||= [];
+      parent.data.children.push(data);
+      const child = d3.hierarchy(data);
+      child.parent = parent;
+      child.depth = parent.depth + 1;
+      child.id = nextNodeId++;
+      child._color = data.color || parent._color;
+      if (parent._children) {
+        parent.children = parent._children;
+        parent._children = null;
+      }
+      parent.children ||= [];
+      parent.children.push(child);
+      selectedId = child.id;
+      focusedId = child.id;
+      pendingFocusId = child.id;
+      update(parent);
+      selectNode(child);
+      notifyTreeChanged();
+      return child;
+    }
+
+    function deleteNode(d, requireConfirmation = true) {
+      if (!d || d === root || !d.parent) return false;
+      if (requireConfirmation && !window.confirm(`Delete "${d.data.title}" and its children?`)) return false;
+      const parent = d.parent;
+      ["children", "_children"].forEach((key) => {
+        if (parent[key]) {
+          parent[key] = parent[key].filter((child) => child !== d);
+          if (!parent[key].length) parent[key] = null;
+        }
+      });
+      if (parent.data.children) {
+        parent.data.children = parent.data.children.filter((child) => child !== d.data);
+        if (!parent.data.children.length) delete parent.data.children;
+      }
+      selectedId = parent.id;
+      focusedId = parent.id;
+      pendingFocusId = parent.id;
+      selectNode(parent);
+      update(parent);
+      notifyTreeChanged();
+      return true;
     }
 
     function diagonal(s, d) {
@@ -1212,6 +1422,7 @@
       });
 
     function update(source) {
+      const hadTreeFocus = document.activeElement?.closest?.("g.node");
       const matchIds = collectMatchIds(searchQuery);
       const found = !searchQuery || (matchIds && matchIds.size > 0);
       noResults.style.display = found ? "none" : "block";
@@ -1253,8 +1464,8 @@
         .attr("class", (d) => `node${d.depth === 0 ? " root" : ""}`)
         .attr("data-title", (d) => d.data.title)
         .attr("data-depth", (d) => d.depth)
-        .attr("role", "button")
-        .attr("tabindex", 0)
+        .attr("role", "treeitem")
+        .attr("tabindex", -1)
         .attr("aria-label", (d) => `${d.data.title}. ${d.data.summary || ""}`)
         .attr("transform", () => `translate(${source.y0 ?? source.y},${source.x0 ?? source.x})`)
         .on("click", (event, d) => {
@@ -1270,15 +1481,48 @@
         .on("pointermove", (event) => placeTooltip(event))
         .on("pointerleave", hideTooltip)
         .on("focus", (event, d) => {
+          focusedId = d.id;
+          gNodes.selectAll("g.node").attr("tabindex", (n) => n.id === focusedId ? 0 : -1);
           const rect = event.currentTarget.getBoundingClientRect();
           showTooltip({ clientX: rect.right, clientY: rect.top }, d);
         })
         .on("blur", hideTooltip)
         .on("keydown", (event, d) => {
-          if (event.key !== "Enter" && event.key !== " ") return;
+          const visible = gNodes.selectAll("g.node").data();
+          const index = visible.findIndex((nodeData) => nodeData.id === d.id);
+          let target = null;
+          if (event.key === "ArrowDown") target = visible[Math.min(index + 1, visible.length - 1)];
+          else if (event.key === "ArrowUp") target = visible[Math.max(index - 1, 0)];
+          else if (event.key === "Home") target = visible[0];
+          else if (event.key === "End") target = visible[visible.length - 1];
+          else if (event.key === "ArrowRight") {
+            if (d._children) {
+              pendingFocusId = d.id;
+              toggleNode(d);
+            } else if (d.children?.length) target = d.children[0];
+          } else if (event.key === "ArrowLeft") {
+            if (d.children) {
+              pendingFocusId = d.id;
+              toggleNode(d);
+            } else if (d.parent) target = d.parent;
+          } else if (event.key === "Enter" || event.key === " ") {
+            selectNode(d);
+            if (d.children || d._children) {
+              pendingFocusId = d.id;
+              toggleNode(d);
+            }
+          } else {
+            return;
+          }
           event.preventDefault();
-          selectNode(d);
-          if (d.children || d._children) toggleNode(d);
+          if (target) {
+            focusedId = target.id;
+            selectNode(target);
+            gNodes.selectAll("g.node")
+              .attr("tabindex", (n) => n.id === focusedId ? 0 : -1)
+              .filter((n) => n.id === focusedId)
+              .node()?.focus();
+          }
         });
 
       nodeEnter.append("rect")
@@ -1288,8 +1532,7 @@
         .attr("rx", 10)
         .attr("ry", 10)
         .attr("width", NODE_W)
-        .attr("height", NODE_H)
-        .attr("role", "button");
+        .attr("height", NODE_H);
 
       // Invisible hit target so Playwright / touch can click nodes even when zoomed small.
       nodeEnter.append("rect")
@@ -1327,6 +1570,12 @@
 
       nodeMerge
         .attr("data-title", (d) => d.data.title)
+        .attr("role", "treeitem")
+        .attr("aria-level", (d) => d.depth + 1)
+        .attr("aria-selected", (d) => String(d.id === selectedId))
+        .attr("aria-expanded", (d) => (d.children || d._children) ? String(Boolean(d.children)) : null)
+        .attr("aria-label", (d) => `${d.data.title}. ${d.data.summary || ""}`)
+        .attr("tabindex", (d) => d.id === focusedId ? 0 : -1)
         .classed("root", (d) => d.depth === 0)
         .classed("active", (d) => d.id === selectedId)
         .classed("match", (d) => !!searchQuery && nodeMatches(d, searchQuery))
@@ -1360,6 +1609,16 @@
         d.x0 = d.x;
         d.y0 = d.y;
       });
+
+      const focusAfterUpdate = pendingFocusId ?? (hadTreeFocus ? focusedId : null);
+      pendingFocusId = null;
+      if (focusAfterUpdate !== null) {
+        window.setTimeout(() => {
+          gNodes.selectAll("g.node")
+            .filter((d) => d.id === focusAfterUpdate)
+            .node()?.focus();
+        }, transitionMs);
+      }
     }
 
     function fitView(padding = 48, animate = true) {
@@ -1471,13 +1730,35 @@
       });
     });
 
+    editModeButton.addEventListener("click", () => setEditMode(!editMode));
+    editForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+      updateNode(selectedNode(), {
+        title: editTitle.value,
+        summary: editSummary.value,
+        detail: editDetail.value,
+        color: editColor.value,
+        source: editSource.value
+      });
+    });
+    document.querySelector("#add-child").addEventListener("click", () => {
+      const child = addChild(selectedNode());
+      if (child) {
+        syncEditForm(child);
+        editTitle.focus();
+        editTitle.select();
+      }
+    });
+    deleteNodeButton.addEventListener("click", () => deleteNode(selectedNode()));
+
     document.addEventListener("keydown", (event) => {
       const typing = event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement;
+      const editingField = typing && event.target !== search;
       if (event.key === "/" && !typing) {
         event.preventDefault();
         search.focus();
         search.select();
-      } else if (event.key === "Escape") {
+      } else if (event.key === "Escape" && !editingField) {
         hideTooltip();
         if (document.activeElement === search || search.value) {
           search.value = "";
@@ -1497,7 +1778,8 @@
     });
 
     // Expose helpers for E2E / debugging without a build step.
-    window.__mindmap = {
+    window.__mindmap = Object.assign(window.__mindmap || {}, {
+      MAP_SCHEMA_VERSION,
       fitView,
       centerOn,
       applySearch,
@@ -1516,6 +1798,29 @@
       resetState,
       setLayout,
       getLayout() { return layoutMode; },
+      collectTreeSnapshot: treeSnapshot,
+      setEditMode,
+      addChild(title, childData = {}) {
+        let parent = null;
+        walkAll(root, (d) => {
+          if (d.data.title === title) parent = d;
+        });
+        return addChild(parent, childData)?.data || null;
+      },
+      updateNode(title, changes) {
+        let found = null;
+        walkAll(root, (d) => {
+          if (d.data.title === title) found = d;
+        });
+        return updateNode(found, changes);
+      },
+      deleteNode(title, requireConfirmation = true) {
+        let found = null;
+        walkAll(root, (d) => {
+          if (d.data.title === title) found = d;
+        });
+        return deleteNode(found, requireConfirmation);
+      },
       toggleByTitle(title) {
         const found = findByTitle(title);
         if (!found || !(found.children || found._children)) return false;
@@ -1541,7 +1846,7 @@
         centerOn(found);
         return true;
       }
-    };
+    });
 
     copyButton.addEventListener("click", async () => {
       try {
