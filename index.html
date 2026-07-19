@@ -636,7 +636,8 @@
               ]
             },
             { title: "Reviewer GO before push", icon: "⇧", summary: "Readonly sign-off required for branch or tag push", detail: "Local commits are allowed, but no git push occurs without written Reviewer GO evidence.", source: SOURCES.review },
-            { title: "Never commit secrets", icon: "●", summary: "Tokens, passwords, DB roles, and environment secrets stay out of git", detail: "Use approved environment or secret locations and redact activity records.", source: SOURCES.access }
+            { title: "Never commit secrets", icon: "●", summary: "Tokens, passwords, DB roles, and environment secrets stay out of git", detail: "Use approved environment or secret locations and redact activity records.", source: SOURCES.access },
+            { title: "Cloudflare Workers AI via env", icon: "AI", summary: "CLOUDFLARE_ACCOUNT_ID + CLOUDFLARE_WORKERS_AI_TOKEN (CONSCIOUS #19)", detail: "Load from Windows User env or workflow/secrets/cloudflare-workers-ai.env. Keep separate from Zone Edit DNS token. Never commit. Verify with tokens/verify then a sample ai/run call.", source: "E:\\MyAgent\\workflow\\cloudflare-workers-ai.md" }
           ]
         },
         {
@@ -698,7 +699,8 @@
             { title: "G: PROD", icon: "G", summary: "Production-like runtime · ports 5000–5999 · prod schemas", detail: "Touched only on explicit production work after Q2 approval.", source: SOURCES.conscious },
             { title: "H: RELEASES", icon: "H", summary: "Versioned handoff and evidence; last three per app family", detail: "Stores release packages and gate evidence; it is not a runtime environment.", source: SOURCES.conscious },
             { title: "Shared infrastructure", icon: "◇", summary: "NGINX 80/443 · PostgreSQL 5432", detail: "Shared resources are protected and must never be appropriated by an app.", source: SOURCES.ports },
-            { title: "Public edge", icon: "☁", summary: "delena.buzz → Cloudflare → NGINX → host", detail: "Prefer named HTTPS subdomains and same-origin auth paths over raw public IP addresses.", source: SOURCES.access }
+            { title: "Public edge", icon: "☁", summary: "delena.buzz → Cloudflare → NGINX → host", detail: "Prefer named HTTPS subdomains and same-origin auth paths over raw public IP addresses.", source: SOURCES.access },
+            { title: "Workers AI credentials", icon: "⚡", summary: "Inference via Workers AI REST — env only", detail: "Account ID and Workers AI token live in User env / MyAgent workflow secrets. Zone Edit DNS token stays separate. How-to: cloudflare-workers-ai.md.", source: "E:\\MyAgent\\workflow\\cloudflare-workers-ai.md" }
           ]
         },
         {
