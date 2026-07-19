@@ -1,0 +1,596 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Interactive map of the AI operating model for this machine.">
+  <title>Machine AI Operating Model</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #07111f;
+      --panel: rgba(12, 25, 43, 0.88);
+      --panel-strong: #10233b;
+      --line: #38506e;
+      --text: #edf6ff;
+      --muted: #9fb3c8;
+      --accent: #62d9ff;
+      --accent-2: #9b8cff;
+      --danger: #ff7b8c;
+      --safe: #69e6ad;
+      --shadow: 0 18px 55px rgba(0, 0, 0, 0.28);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 14% 8%, rgba(98, 217, 255, 0.15), transparent 26rem),
+        radial-gradient(circle at 92% 18%, rgba(155, 140, 255, 0.14), transparent 28rem),
+        var(--bg);
+      font: 15px/1.5 Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    button, input { font: inherit; }
+    button { color: inherit; }
+
+    .app {
+      display: grid;
+      grid-template-rows: auto 1fr;
+      min-height: 100vh;
+    }
+
+    header {
+      position: sticky;
+      z-index: 10;
+      top: 0;
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem clamp(1rem, 3vw, 2.5rem);
+      border-bottom: 1px solid rgba(159, 179, 200, 0.18);
+      background: rgba(7, 17, 31, 0.82);
+      backdrop-filter: blur(18px);
+    }
+
+    .brand h1 {
+      margin: 0;
+      font-size: clamp(1rem, 2vw, 1.35rem);
+      letter-spacing: 0.01em;
+    }
+
+    .brand p {
+      margin: 0.15rem 0 0;
+      color: var(--muted);
+      font-size: 0.82rem;
+    }
+
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.55rem;
+      justify-content: flex-end;
+    }
+
+    .search {
+      width: min(19rem, 42vw);
+      padding: 0.62rem 0.8rem;
+      color: var(--text);
+      border: 1px solid var(--line);
+      border-radius: 0.65rem;
+      outline: none;
+      background: var(--panel);
+    }
+
+    .search:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(98, 217, 255, 0.12);
+    }
+
+    .control {
+      padding: 0.58rem 0.78rem;
+      border: 1px solid var(--line);
+      border-radius: 0.65rem;
+      background: var(--panel);
+      cursor: pointer;
+    }
+
+    .control:hover { border-color: var(--accent); }
+
+    main {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 22rem;
+      min-height: 0;
+    }
+
+    .map-shell {
+      overflow: auto;
+      padding: clamp(1rem, 3vw, 2.5rem);
+    }
+
+    .map {
+      min-width: 50rem;
+      padding-bottom: 4rem;
+    }
+
+    .tree, .tree ul {
+      position: relative;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .tree ul {
+      margin-left: 2rem;
+      padding-left: 1.6rem;
+      border-left: 1px solid var(--line);
+    }
+
+    .tree li {
+      position: relative;
+      padding: 0.42rem 0;
+    }
+
+    .tree ul > li::before {
+      position: absolute;
+      top: 1.55rem;
+      left: -1.6rem;
+      width: 1.6rem;
+      border-top: 1px solid var(--line);
+      content: "";
+    }
+
+    .node {
+      display: inline-grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 0.7rem;
+      align-items: center;
+      width: min(42rem, calc(100vw - 34rem));
+      min-width: 24rem;
+      padding: 0.78rem 0.9rem;
+      text-align: left;
+      border: 1px solid var(--line);
+      border-left: 4px solid var(--node-color, var(--accent));
+      border-radius: 0.8rem;
+      background: linear-gradient(125deg, rgba(16, 35, 59, 0.96), rgba(10, 23, 40, 0.96));
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.16);
+      cursor: pointer;
+    }
+
+    .node:hover, .node.active {
+      border-color: var(--node-color, var(--accent));
+      transform: translateY(-1px);
+    }
+
+    .node.root {
+      width: min(46rem, calc(100vw - 34rem));
+      padding: 1rem 1.15rem;
+      border-left-width: 5px;
+      background: linear-gradient(125deg, rgba(23, 59, 83, 0.98), rgba(27, 31, 75, 0.98));
+      box-shadow: var(--shadow);
+    }
+
+    .icon { font-size: 1.25rem; }
+    .node-title { display: block; font-weight: 720; }
+    .node-summary { display: block; margin-top: 0.12rem; color: var(--muted); font-size: 0.82rem; }
+    .chevron { color: var(--muted); transition: transform 0.18s ease; }
+    .collapsed > .node .chevron { transform: rotate(-90deg); }
+    .collapsed > ul { display: none; }
+
+    .no-results {
+      display: none;
+      max-width: 32rem;
+      margin: 2rem;
+      padding: 1rem;
+      color: var(--muted);
+      border: 1px dashed var(--line);
+      border-radius: 0.8rem;
+    }
+
+    aside {
+      position: sticky;
+      top: 4.9rem;
+      align-self: start;
+      height: calc(100vh - 4.9rem);
+      overflow: auto;
+      padding: 1.5rem;
+      border-left: 1px solid rgba(159, 179, 200, 0.18);
+      background: rgba(8, 19, 34, 0.72);
+    }
+
+    .eyebrow {
+      color: var(--accent);
+      font-size: 0.72rem;
+      font-weight: 800;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+
+    aside h2 { margin: 0.35rem 0 0.7rem; font-size: 1.35rem; }
+    aside p { color: var(--muted); }
+
+    .source {
+      margin-top: 1rem;
+      padding: 0.85rem;
+      border: 1px solid var(--line);
+      border-radius: 0.75rem;
+      background: var(--panel);
+    }
+
+    .source-label { color: var(--muted); font-size: 0.74rem; text-transform: uppercase; }
+    .source code {
+      display: block;
+      margin-top: 0.35rem;
+      overflow-wrap: anywhere;
+      color: var(--safe);
+      font-size: 0.78rem;
+    }
+
+    .copy {
+      margin-top: 0.65rem;
+      padding: 0;
+      color: var(--accent);
+      border: 0;
+      background: transparent;
+      cursor: pointer;
+    }
+
+    .legend {
+      display: grid;
+      gap: 0.45rem;
+      margin-top: 1.5rem;
+      color: var(--muted);
+      font-size: 0.78rem;
+    }
+
+    .dot {
+      display: inline-block;
+      width: 0.65rem;
+      height: 0.65rem;
+      margin-right: 0.45rem;
+      border-radius: 50%;
+      background: currentColor;
+    }
+
+    mark {
+      color: var(--text);
+      border-radius: 0.2rem;
+      background: rgba(255, 204, 102, 0.35);
+    }
+
+    @media (max-width: 900px) {
+      header { align-items: flex-start; flex-direction: column; }
+      .toolbar { justify-content: flex-start; width: 100%; }
+      .search { flex: 1; width: auto; min-width: 10rem; }
+      main { grid-template-columns: 1fr; }
+      .map { min-width: 39rem; }
+      .node, .node.root { width: 32rem; min-width: 0; }
+      aside {
+        position: relative;
+        top: auto;
+        height: auto;
+        border-top: 1px solid rgba(159, 179, 200, 0.18);
+        border-left: 0;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      * { scroll-behavior: auto !important; transition: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div class="brand">
+        <h1>Machine AI Operating Model</h1>
+        <p>Living awareness map · source files remain authoritative</p>
+      </div>
+      <div class="toolbar">
+        <input id="search" class="search" type="search" placeholder="Search rules, roles, paths…" aria-label="Search mind map">
+        <button id="expand" class="control" type="button">Expand all</button>
+        <button id="collapse" class="control" type="button">Collapse branches</button>
+      </div>
+    </header>
+
+    <main>
+      <section class="map-shell" aria-label="Mind map">
+        <div id="map" class="map"></div>
+        <p id="no-results" class="no-results">No matching nodes. Try a rule name, role, environment, or file path.</p>
+      </section>
+
+      <aside aria-live="polite">
+        <span class="eyebrow">Selected node</span>
+        <h2 id="detail-title">This Machine — AI Operating Model</h2>
+        <p id="detail-text">Select any node to inspect its purpose and authoritative source.</p>
+        <div id="source-box" class="source">
+          <span class="source-label">Primary source</span>
+          <code id="detail-source">E:\MyAgent\workflow\CONSCIOUS.md</code>
+          <button id="copy" class="copy" type="button">Copy path</button>
+        </div>
+        <div class="legend">
+          <span style="color:#62d9ff"><i class="dot"></i>Governance</span>
+          <span style="color:#ff7b8c"><i class="dot"></i>Standing rules</span>
+          <span style="color:#69e6ad"><i class="dot"></i>Workflow</span>
+          <span style="color:#ffcc66"><i class="dot"></i>Environments</span>
+          <span style="color:#9b8cff"><i class="dot"></i>Apps and interfaces</span>
+        </div>
+      </aside>
+    </main>
+  </div>
+
+  <script>
+    const SOURCES = {
+      conscious: "E:\\MyAgent\\workflow\\CONSCIOUS.md",
+      agents: "E:\\MyAgent\\AGENTS.md",
+      workflow: "E:\\MyWorkspace\\agent-portal\\docs\\platform\\WORKFLOW.md",
+      access: "E:\\MyWorkspace\\agent-portal\\docs\\platform\\ACCESS-PROTOCOLS.md",
+      ports: "E:\\MyAgent\\workflow\\ports\\REGISTRY.md",
+      db: "E:\\MyAgent\\workflow\\db\\README.md",
+      css: "E:\\MyAgent\\workflow\\css\\README.md",
+      promote: "E:\\MyAgent\\workflow\\promote\\README.md",
+      activity: "E:\\MyAgent\\workflow\\activity\\ACTIVITY-LOG.md",
+      testing: "E:\\MyAgent\\workflow\\testing\\E2E-HIRE.md",
+      review: "E:\\MyAgent\\workflow\\review\\REVIEWER-SIGNOFF.md",
+      sandbox: "E:\\MyWorkspace\\agent-portal\\docs\\platform\\SANDBOX.md",
+      api: "E:\\MyWorkspace\\agent-portal\\docs\\platform\\AGENT-API.md"
+    };
+
+    const mapData = {
+      title: "This Machine — AI Operating Model",
+      icon: "◎",
+      summary: "Shared awareness for every human and AI provider",
+      detail: "A visual index of governance, non-negotiable rules, delivery workflow, environments, and machine interfaces. It summarizes policy; linked markdown remains the source of truth.",
+      source: SOURCES.conscious,
+      color: "#d9f3ff",
+      children: [
+        {
+          title: "Governance",
+          icon: "⌂",
+          summary: "Authority, scope, and sources of truth",
+          detail: "Machine policy is hierarchical and provider-agnostic. Convenience rules may mirror policy, but they do not replace the MyAgent standing orders.",
+          source: SOURCES.agents,
+          color: "#62d9ff",
+          children: [
+            { title: "E:\\MyAgent", icon: "A", summary: "Top-level machine standing orders", detail: "AGENTS.md and workflow/CONSCIOUS.md are the binding source of truth for all agents.", source: SOURCES.agents },
+            { title: "CONSCIOUS rules 1–18", icon: "§", summary: "Non-negotiable machine policy", detail: "Safety, environment isolation, registries, evidence, documentation, testing, release, and review obligations.", source: SOURCES.conscious },
+            { title: "All AI providers", icon: "∞", summary: "Cursor, Antigravity, portal agents, and others", detail: "Provider-specific skills and rules improve discovery, but every provider follows the same standing orders.", source: SOURCES.agents },
+            { title: "E:\\machine-docs", icon: "◫", summary: "Personas and crew pre-work standards", detail: "Defines role/persona practices used alongside machine standing orders.", source: "E:\\machine-docs" },
+            { title: "E:\\MyWorkspace", icon: "◇", summary: "Development control plane and active project hub", detail: "Hosts the platform handbook, sandbox, product repositories, and machine-aware applications.", source: "E:\\MyWorkspace\\README.md" },
+            { title: "Platform handbook", icon: "▤", summary: "Versioned workflow and access documentation", detail: "The Agent Portal platform docs describe machine access, workflow, ports, sandbox, APIs, and operational boundaries.", source: SOURCES.access }
+          ]
+        },
+        {
+          title: "Standing Rules",
+          icon: "!",
+          summary: "Safety and delivery constraints that always apply",
+          detail: "These controls protect machine state, environment integrity, security, evidence quality, and reproducibility.",
+          source: SOURCES.conscious,
+          color: "#ff7b8c",
+          children: [
+            { title: "No destructive action without confirmation", icon: "⛔", summary: "No delete, format, wipe, or partition changes", detail: "The exact destructive target and action require explicit confirmation in the current conversation. If unsure, stop and ask.", source: SOURCES.conscious },
+            { title: "Reserve ports before binding", icon: "↔", summary: "DEV 3xxx · PREPROD 4xxx · PROD 5xxx", detail: "Update both markdown and JSON registries before listening. Never steal shared or active ports.", source: SOURCES.ports },
+            { title: "Schema-per-environment", icon: "▱", summary: "Shared PostgreSQL :5432 with isolated schemas and roles", detail: "Each app uses app_<id> with dev, preprod, and prod schemas. A lower environment must never point to a higher schema.", source: SOURCES.db },
+            { title: "CSS-only application auth", icon: "⚿", summary: "Register clientId; do not invent another IdP", detail: "New or migrated apps integrate with the Centralized Security System and validate RS256 tokens through JWKS.", source: SOURCES.css },
+            { title: "Evidence-gated promotion", icon: "✓", summary: "Q1 DEV→PREPROD · Q2 PREPROD→PROD", detail: "Promotion requires evidence packs, dependency versions and tags, crew checks, and an EM GO decision.", source: SOURCES.promote },
+            { title: "Document every meaningful action", icon: "✎", summary: "Activity log plus product/ops docs in the same turn", detail: "Chat memory is not sufficient. Record provider, role, target, result, and evidence without exposing secrets.", source: SOURCES.activity },
+            {
+              title: "Application testing gates",
+              icon: "◉",
+              summary: "Hired E2E, serialized browser runs, DEV before tag",
+              detail: "Built or materially changed UI/API surfaces require hired end-to-end testing and written evidence.",
+              source: SOURCES.testing,
+              children: [
+                { title: "Three visual presets", icon: "▣", summary: "360×780 · 1280×800 · 800×1280", detail: "Visual apps cover Realme P2 Pro, desktop, and tablet presets. API-only apps still require API E2E.", source: SOURCES.testing },
+                { title: "One Playwright runner", icon: "1", summary: "Claim slot before run; release with result", detail: "Concurrent browser runners are prohibited because they degrade the machine. Spec authoring can be parallel; execution cannot.", source: "E:\\MyAgent\\workflow\\testing\\PLAYWRIGHT-SLOT.md" },
+                { title: "DEV-domain login", icon: "https", summary: "Use public DEV hostname when it exists", detail: "Login E2E must exercise the HTTPS domain, proxy path, cookies, redirect URI, and CSS CORS—not loopback alone.", source: "E:\\MyAgent\\workflow\\testing\\DEV-HOST-E2E.md" },
+                { title: "E2E before release tag", icon: "tag", summary: "Green DEV evidence precedes annotated tags", detail: "Staging or production smoke does not replace the required DEV test gate.", source: "E:\\MyAgent\\GIT-RELEASE-MANAGEMENT.md" }
+              ]
+            },
+            { title: "Reviewer GO before push", icon: "⇧", summary: "Readonly sign-off required for branch or tag push", detail: "Local commits are allowed, but no git push occurs without written Reviewer GO evidence.", source: SOURCES.review },
+            { title: "Never commit secrets", icon: "●", summary: "Tokens, passwords, DB roles, and environment secrets stay out of git", detail: "Use approved environment or secret locations and redact activity records.", source: SOURCES.access }
+          ]
+        },
+        {
+          title: "Delivery Workflow",
+          icon: "→",
+          summary: "Repeatable, reviewable delivery—not ad-hoc production edits",
+          detail: "Humans and agents operate through explicit roles and a standard loop from orientation through documentation.",
+          source: SOURCES.workflow,
+          color: "#69e6ad",
+          children: [
+            {
+              title: "Roles",
+              icon: "♟",
+              summary: "Separation of responsibility",
+              detail: "Each role has a bounded responsibility and may map to a specialized skill or agent.",
+              source: SOURCES.workflow,
+              children: [
+                { title: "Requester", icon: "R", summary: "States the goal", detail: "Requests outcomes but does not bind ports or deploy.", source: SOURCES.workflow },
+                { title: "Planner", icon: "P", summary: "Reads docs, plans, and claims resources", detail: "Identifies paths, ports, auth, and environment before implementation.", source: SOURCES.workflow },
+                { title: "Builder", icon: "B", summary: "Implements in sandbox or feature branch", detail: "Writes code within approved boundaries and never embeds secrets.", source: SOURCES.workflow },
+                { title: "Reviewer", icon: "V", summary: "Checks code, security, and protocol compliance", detail: "Produces written sign-off and does not silently mutate the implementation.", source: SOURCES.review },
+                { title: "QA", icon: "Q", summary: "Tests against a checklist", detail: "Collects evidence and reports defects without making silent production changes.", source: SOURCES.workflow },
+                { title: "Releaser", icon: "L", summary: "Versions and promotes approved artifacts", detail: "Moves versioned artifacts through gates without skipping environments.", source: SOURCES.workflow },
+                { title: "Ops", icon: "O", summary: "Owns runtime, edge, and narrow restarts", detail: "Manages ports, NGINX, Cloudflare, and process control by exact port/PID.", source: SOURCES.access }
+              ]
+            },
+            {
+              title: "Standard loop",
+              icon: "↻",
+              summary: "Orient → Plan → Claim → Build → Verify → Review → Promote → Record",
+              detail: "Every stage creates enough context and evidence for the next human or agent to continue safely.",
+              source: SOURCES.workflow,
+              children: [
+                { title: "1. Orient", icon: "1", summary: "Read access, registry, and project docs", detail: "Understand constraints before changing state.", source: SOURCES.access },
+                { title: "2. Plan", icon: "2", summary: "Name environment, path, ports, and CSS client", detail: "Resolve meaningful choices before implementation.", source: SOURCES.workflow },
+                { title: "3. Claim", icon: "3", summary: "Reserve shared resources", detail: "Register ports, database schemas, and auth clients before use.", source: SOURCES.workflow },
+                { title: "4. Build", icon: "4", summary: "Work in DEV sandbox or repository tree", detail: "No direct staging or production edits by a Builder.", source: SOURCES.sandbox },
+                { title: "5. Verify", icon: "5", summary: "Health, tests, E2E, and change inspection", detail: "Validate behavior proportionate to risk and preserve evidence.", source: SOURCES.testing },
+                { title: "6. Review", icon: "6", summary: "Human or Reviewer checks before merge/push", detail: "Check rules, secrets, tests, docs, and boundaries.", source: SOURCES.review },
+                { title: "7. Promote", icon: "7", summary: "Versioned artifact through Q1 and Q2", detail: "Never skip environments or deploy without GO.", source: SOURCES.promote },
+                { title: "8. Record", icon: "8", summary: "Update logs, registries, and operational docs", detail: "Leave enough written context to reproduce and continue the work.", source: SOURCES.activity }
+              ]
+            },
+            { title: "Git protocol", icon: "⑂", summary: "Feature branch · no force-push · PR review · approved merge", detail: "Do not bypass hooks without explicit instruction. A push also requires Reviewer GO under CONSCIOUS rule 17.", source: SOURCES.workflow },
+            { title: "Definition of done", icon: "■", summary: "Correct place, current docs, no secrets, reproducible", detail: "A human must be able to re-run or operate the result from documentation alone.", source: SOURCES.workflow }
+          ]
+        },
+        {
+          title: "Environments & Drives",
+          icon: "▥",
+          summary: "Physical and logical isolation",
+          detail: "Drive, port, database, and deployment roles align. Environment boundaries must not be mixed.",
+          source: SOURCES.conscious,
+          color: "#ffcc66",
+          children: [
+            { title: "C: OS and tools", icon: "C", summary: "Not an application environment root", detail: "Shared runtimes and operating system assets only.", source: SOURCES.conscious },
+            { title: "E: DEV", icon: "E", summary: "Day-to-day development · ports 3000–3999 · dev schemas", detail: "Default location for repositories, experiments, and agent-generated development work.", source: SOURCES.conscious },
+            { title: "F: PREPROD", icon: "F", summary: "Staging runtime · ports 4000–4999 · preprod schemas", detail: "Touched only for explicit staging work and evidence-approved Q1 promotion.", source: SOURCES.conscious },
+            { title: "G: PROD", icon: "G", summary: "Production-like runtime · ports 5000–5999 · prod schemas", detail: "Touched only on explicit production work after Q2 approval.", source: SOURCES.conscious },
+            { title: "H: RELEASES", icon: "H", summary: "Versioned handoff and evidence; last three per app family", detail: "Stores release packages and gate evidence; it is not a runtime environment.", source: SOURCES.conscious },
+            { title: "Shared infrastructure", icon: "◇", summary: "NGINX 80/443 · PostgreSQL 5432", detail: "Shared resources are protected and must never be appropriated by an app.", source: SOURCES.ports },
+            { title: "Public edge", icon: "☁", summary: "delena.buzz → Cloudflare → NGINX → host", detail: "Prefer named HTTPS subdomains and same-origin auth paths over raw public IP addresses.", source: SOURCES.access }
+          ]
+        },
+        {
+          title: "Apps & Interfaces",
+          icon: "⬡",
+          summary: "How agents and products interact with the machine",
+          detail: "The control plane exposes documented projects, APIs, and runtime services without bypassing machine policy.",
+          source: SOURCES.api,
+          color: "#9b8cff",
+          children: [
+            { title: "Agent Portal", icon: "AP", summary: "Sessions, roles, tasks, memory, messages, pipelines, and ACLs", detail: "The foundation for VirtualDev Co workflows and machine-aware agent sessions.", source: "E:\\MyWorkspace\\agent-portal\\README.md" },
+            { title: "Machine Gateway", icon: "MG", summary: "Host consciousness API on existing portal ports", detail: "Provides machine context and chat through /api/machine without a new port, DNS name, or CSS client.", source: "E:\\MyWorkspace\\agent-portal\\docs\\platform\\MACHINE-GATEWAY.md" },
+            { title: "Agent API", icon: "API", summary: "Authenticated programmatic UI-parity actions", detail: "External AIs discover actions, authenticate with CSS or API key, and operate scoped sessions.", source: SOURCES.api },
+            { title: "Centralized Security System", icon: "CSS", summary: "Shared authentication and JWKS", detail: "The mandatory identity provider for new and migrated applications.", source: "E:\\MyWorkspace\\centralized-security-system\\README.md" },
+            { title: "Sandbox", icon: "□", summary: "E:\\MyWorkspace\\sandbox\\<slug>", detail: "Canonical root for new greenfield agent projects. Register each project and claim ports only if it listens.", source: SOURCES.sandbox },
+            { title: "Product repositories", icon: "◆", summary: "Portal, sentinel, trading, agentverse, library, RD center, and others", detail: "Each product has its own docs and operations while inheriting the same machine standing orders.", source: "E:\\MyWorkspace\\README.md" }
+          ]
+        }
+      ]
+    };
+
+    const map = document.querySelector("#map");
+    const search = document.querySelector("#search");
+    const noResults = document.querySelector("#no-results");
+    const detailTitle = document.querySelector("#detail-title");
+    const detailText = document.querySelector("#detail-text");
+    const detailSource = document.querySelector("#detail-source");
+    const copyButton = document.querySelector("#copy");
+    let selectedButton = null;
+
+    function createNode(node, depth = 0) {
+      const li = document.createElement("li");
+      li.dataset.search = [node.title, node.summary, node.detail, node.source].join(" ").toLowerCase();
+      li.style.setProperty("--node-color", node.color || "var(--node-color)");
+
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = `node${depth === 0 ? " root" : ""}`;
+      button.innerHTML = `
+        <span class="icon" aria-hidden="true">${node.icon || "·"}</span>
+        <span>
+          <span class="node-title">${node.title}</span>
+          <span class="node-summary">${node.summary || ""}</span>
+        </span>
+        <span class="chevron" aria-hidden="true">${node.children?.length ? "⌄" : "›"}</span>
+      `;
+
+      button.addEventListener("click", () => {
+        if (selectedButton) selectedButton.classList.remove("active");
+        selectedButton = button;
+        button.classList.add("active");
+        detailTitle.textContent = node.title;
+        detailText.textContent = node.detail || node.summary || "";
+        detailSource.textContent = node.source || "No direct source";
+        if (node.children?.length) li.classList.toggle("collapsed");
+      });
+
+      li.appendChild(button);
+
+      if (node.children?.length) {
+        const ul = document.createElement("ul");
+        node.children.forEach(child => ul.appendChild(createNode({ ...child, color: child.color || node.color }, depth + 1)));
+        li.appendChild(ul);
+      }
+
+      return li;
+    }
+
+    const rootList = document.createElement("ul");
+    rootList.className = "tree";
+    rootList.appendChild(createNode(mapData));
+    map.appendChild(rootList);
+
+    function setCollapsed(collapse) {
+      document.querySelectorAll(".tree li").forEach((li, index) => {
+        if (!li.querySelector(":scope > ul")) return;
+        li.classList.toggle("collapsed", collapse && index > 0);
+      });
+    }
+
+    function restoreLabels() {
+      document.querySelectorAll(".node-title, .node-summary").forEach(el => {
+        if (el.dataset.original) el.innerHTML = el.dataset.original;
+      });
+    }
+
+    function highlight(el, query) {
+      if (!el.dataset.original) el.dataset.original = el.innerHTML;
+      const text = el.textContent;
+      if (!query) {
+        el.innerHTML = el.dataset.original;
+        return;
+      }
+      const index = text.toLowerCase().indexOf(query);
+      if (index === -1) return;
+      el.innerHTML = `${text.slice(0, index)}<mark>${text.slice(index, index + query.length)}</mark>${text.slice(index + query.length)}`;
+    }
+
+    function filterTree() {
+      const query = search.value.trim().toLowerCase();
+      restoreLabels();
+
+      function visit(li) {
+        const children = [...li.querySelectorAll(":scope > ul > li")];
+        const childMatch = children.map(visit).some(Boolean);
+        const ownMatch = !query || li.dataset.search.includes(query);
+        const visible = ownMatch || childMatch;
+        li.hidden = !visible;
+        if (query && visible) li.classList.remove("collapsed");
+        if (ownMatch && query) {
+          li.querySelectorAll(":scope > .node .node-title, :scope > .node .node-summary")
+            .forEach(el => highlight(el, query));
+        }
+        return visible;
+      }
+
+      const root = rootList.firstElementChild;
+      const found = visit(root);
+      noResults.style.display = found ? "none" : "block";
+    }
+
+    search.addEventListener("input", filterTree);
+    document.querySelector("#expand").addEventListener("click", () => setCollapsed(false));
+    document.querySelector("#collapse").addEventListener("click", () => setCollapsed(true));
+
+    copyButton.addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(detailSource.textContent);
+        copyButton.textContent = "Copied";
+      } catch {
+        copyButton.textContent = "Copy unavailable";
+      }
+      window.setTimeout(() => { copyButton.textContent = "Copy path"; }, 1400);
+    });
+
+    setCollapsed(true);
+  </script>
+</body>
+</html>
