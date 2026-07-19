@@ -14,6 +14,7 @@ Open [`index.html`](index.html) directly in a browser. No server, package instal
 The map supports:
 
 - D3 tree layout with SVG nodes and links
+- Layout modes via the `#layout-mode` selector: **horizontal** (default), **radial**, and **cluster** (`__mindmap.setLayout` / `getLayout`); transition throttling keeps 200+ nodes responsive
 - Zoom / pan (scroll + drag) and **Reset view**
 - Collapsible branches (`_children` pattern)
 - Debounced search across titles, descriptions, and source paths (including collapsed nodes), with match count

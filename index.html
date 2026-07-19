@@ -147,6 +147,32 @@
       text-align: left;
     }
 
+    select.control {
+      -webkit-appearance: none;
+      appearance: none;
+      padding-right: 1.6rem;
+      background-image: linear-gradient(45deg, transparent 50%, var(--muted) 50%), linear-gradient(135deg, var(--muted) 50%, transparent 50%);
+      background-position: calc(100% - 0.85rem) 50%, calc(100% - 0.55rem) 50%;
+      background-size: 0.32rem 0.32rem, 0.32rem 0.32rem;
+      background-repeat: no-repeat;
+    }
+
+    select.control option { color: #0b1a2c; }
+
+    .layout-wrap { display: flex; align-items: center; }
+
+    .visually-hidden {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      margin: -1px;
+      padding: 0;
+      overflow: hidden;
+      clip: rect(0 0 0 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
     main {
       display: grid;
       grid-template-columns: minmax(0, 1fr) 22rem;
@@ -442,6 +468,14 @@
           </div>
         </details>
         <button id="reset-state" class="control" type="button">Reset state</button>
+        <label class="layout-wrap">
+          <span class="visually-hidden">Layout mode</span>
+          <select id="layout-mode" class="control" aria-label="Layout mode">
+            <option value="horizontal">Horizontal</option>
+            <option value="radial">Radial</option>
+            <option value="cluster">Cluster</option>
+          </select>
+        </label>
       </div>
     </header>
 
@@ -632,6 +666,9 @@
     const DX = NODE_H + 28;
     const DY = NODE_W + 54;
     const STORAGE_KEY = "mindmap.ui.v1";
+    const RADIAL_STEP = 210;
+    const LAYOUT_MODES = ["horizontal", "radial", "cluster"];
+    const PERF_NODE_LIMIT = 200;
 
     const mapEl = document.querySelector("#map");
     const search = document.querySelector("#search");
@@ -664,6 +701,8 @@
     let dragged = false;
     let stateSaveTimer = null;
     let suppressStateSave = false;
+    let layoutMode = "horizontal";
+    let renderGen = 0;
 
     const svg = d3.select("#map").append("svg")
       .attr("aria-hidden", "false");
@@ -686,12 +725,66 @@
 
     svg.call(zoom);
 
-    const tree = d3.tree().nodeSize([DX, DY]);
+    // Layout engines. Horizontal uses a fixed depth grid; radial/cluster map the
+    // hierarchy onto a polar plane. All engines feed one shared coordinate
+    // convention: d.y = screen X, d.x = screen Y (matches translate(y,x)).
+    const treeHorizontal = d3.tree().nodeSize([DX, DY]);
+    const treeRadial = d3.tree()
+      .separation((a, b) => (a.parent === b.parent ? 1 : 2) / Math.max(a.depth, 1));
+    const clusterRadial = d3.cluster()
+      .separation((a, b) => (a.parent === b.parent ? 1 : 2) / Math.max(a.depth, 1));
+
+    const radialLinkGen = d3.linkRadial()
+      .angle((d) => d._angle)
+      .radius((d) => d._radius);
+
+    // Assign final render coordinates to every node in the shared convention.
+    // Radial modes also cache polar _angle / _radius so links can use linkRadial.
+    function applyLayout(rootNode) {
+      if (layoutMode === "radial" || layoutMode === "cluster") {
+        const engine = layoutMode === "cluster" ? clusterRadial : treeRadial;
+        engine.size([2 * Math.PI, radialRadius(rootNode)])(rootNode);
+        rootNode.each((d) => {
+          const angle = d.x;
+          const radius = d.y;
+          d._angle = angle;
+          d._radius = radius;
+          const point = d3.pointRadial(angle, radius);
+          d.y = point[0];
+          d.x = point[1];
+        });
+      } else {
+        treeHorizontal(rootNode);
+        rootNode.each((d) => {
+          d._angle = null;
+          d._radius = null;
+          d.y = d.depth * DY;
+        });
+      }
+    }
+
+    function radialRadius(rootNode) {
+      let maxDepth = 0;
+      rootNode.each((d) => { if (d.depth > maxDepth) maxDepth = d.depth; });
+      return Math.max(1, maxDepth) * RADIAL_STEP;
+    }
+
+    // Cartesian drag offsets do not make sense on a polar plane; reset them so
+    // fitView / centerOn / links stay consistent after a layout switch.
+    function clearDragOffsets() {
+      root.each((d) => { d._dragX = 0; d._dragY = 0; });
+    }
+
+    function useDragOffsets() {
+      return layoutMode === "horizontal";
+    }
 
     function position(d) {
+      const dx = useDragOffsets() ? (d._dragX || 0) : 0;
+      const dy = useDragOffsets() ? (d._dragY || 0) : 0;
       return {
-        x: d.x + (d._dragX || 0),
-        y: d.y + (d._dragY || 0)
+        x: d.x + dx,
+        y: d.y + dy
       };
     }
 
@@ -1087,6 +1180,16 @@
       return `M${start.y},${start.x}C${(start.y + end.y) / 2},${start.x} ${(start.y + end.y) / 2},${end.x} ${end.y},${end.x}`;
     }
 
+    // Dispatch link geometry by layout: cubic diagonal for horizontal, D3's
+    // linkRadial (fed cached _angle / _radius) for the polar layouts.
+    function linkPath(s, d) {
+      if ((layoutMode === "radial" || layoutMode === "cluster") &&
+          s._angle != null && d._angle != null) {
+        return radialLinkGen({ source: s, target: d });
+      }
+      return diagonal(s, d);
+    }
+
     const nodeDrag = d3.drag()
       .clickDistance(5)
       .on("start", function(event, d) {
@@ -1100,7 +1203,7 @@
         d._dragY = (d._dragY || 0) + event.dx;
         d._dragX = (d._dragX || 0) + event.dy;
         d3.select(this.parentNode).attr("transform", nodeTransform(d));
-        gLinks.selectAll("path.link").attr("d", (link) => diagonal(link.source, link.target));
+        gLinks.selectAll("path.link").attr("d", (link) => linkPath(link.source, link.target));
       })
       .on("end", function() {
         d3.select(this.parentNode).classed("dragging", false);
@@ -1113,13 +1216,15 @@
       const found = !searchQuery || (matchIds && matchIds.size > 0);
       noResults.style.display = found ? "none" : "block";
 
-      const treeRoot = tree(root);
-      const nodes = treeRoot.descendants().filter((d) => !matchIds || matchIds.has(d.id));
-      const links = treeRoot.links().filter((l) => !matchIds || (matchIds.has(l.source.id) && matchIds.has(l.target.id)));
+      // Compute layout for the whole tree, then join only the visible subset.
+      applyLayout(root);
+      const nodes = root.descendants().filter((d) => !matchIds || matchIds.has(d.id));
+      const links = root.links().filter((l) => !matchIds || (matchIds.has(l.source.id) && matchIds.has(l.target.id)));
 
-      nodes.forEach((d) => {
-        d.y = d.depth * DY;
-      });
+      // Transition throttling: large joins skip the tween so 200+ nodes stay
+      // responsive. A generation token guards against stale async callbacks.
+      renderGen += 1;
+      const dur = nodes.length > PERF_NODE_LIMIT ? 0 : transitionMs;
 
       const link = gLinks.selectAll("path.link")
         .data(links, (d) => d.target.id);
@@ -1131,9 +1236,9 @@
             const o = { x: source.x0 ?? source.x, y: source.y0 ?? source.y };
             return diagonal(o, o);
           })
-          .call((enter) => enter.transition().duration(transitionMs).attr("d", (d) => diagonal(d.source, d.target))),
-        (updateSel) => updateSel.transition().duration(transitionMs).attr("d", (d) => diagonal(d.source, d.target)),
-        (exit) => exit.transition().duration(transitionMs)
+          .call((enter) => enter.transition().duration(dur).attr("d", (d) => linkPath(d.source, d.target))),
+        (updateSel) => updateSel.transition().duration(dur).attr("d", (d) => linkPath(d.source, d.target)),
+        (exit) => exit.transition().duration(dur)
           .attr("d", () => {
             const o = { x: source.x, y: source.y };
             return diagonal(o, o);
@@ -1225,7 +1330,7 @@
         .classed("root", (d) => d.depth === 0)
         .classed("active", (d) => d.id === selectedId)
         .classed("match", (d) => !!searchQuery && nodeMatches(d, searchQuery))
-        .transition().duration(transitionMs)
+        .transition().duration(dur)
         .attr("transform", nodeTransform);
 
       nodeMerge.select(".node-card")
@@ -1247,7 +1352,7 @@
       // Style mark tspans (SVG uses fill, not HTML mark)
       nodeMerge.selectAll("tspan.mark").attr("fill", "#ffe08a").attr("font-weight", 800);
 
-      node.exit().transition().duration(transitionMs)
+      node.exit().transition().duration(dur)
         .attr("transform", () => `translate(${source.y},${source.x})`)
         .remove();
 
@@ -1317,6 +1422,25 @@
 
     function zoomBy(factor) {
       svg.transition().duration(transitionMs).call(zoom.scaleBy, factor);
+    }
+
+    const layoutSelect = document.querySelector("#layout-mode");
+
+    function setLayout(mode) {
+      if (!LAYOUT_MODES.includes(mode) || mode === layoutMode) {
+        if (layoutSelect && layoutSelect.value !== layoutMode) layoutSelect.value = layoutMode;
+        return layoutMode;
+      }
+      layoutMode = mode;
+      if (layoutSelect && layoutSelect.value !== mode) layoutSelect.value = mode;
+      clearDragOffsets();
+      update(root);
+      window.setTimeout(() => fitView(), transitionMs + 20);
+      return layoutMode;
+    }
+
+    if (layoutSelect) {
+      layoutSelect.addEventListener("change", (event) => setLayout(event.target.value));
     }
 
     search.addEventListener("input", queueSearch);
@@ -1390,6 +1514,8 @@
       saveState,
       loadState,
       resetState,
+      setLayout,
+      getLayout() { return layoutMode; },
       toggleByTitle(title) {
         const found = findByTitle(title);
         if (!found || !(found.children || found._children)) return false;

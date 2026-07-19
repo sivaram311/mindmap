@@ -293,3 +293,77 @@ test('reset view preserves custom node drag offsets', async ({ page }) => {
   const offset = await page.evaluate(() => window.__mindmap.collectState().dragOffsets.Governance);
   expect(offset).toEqual({ x: 18, y: 27 });
 });
+
+// --- Workstream B: Layout Modes & Performance -------------------------------
+
+test('layout switcher is visible and defaults to horizontal', async ({ page }) => {
+  const select = page.locator('#layout-mode');
+  await expect(select).toBeVisible();
+  await expect(select).toHaveValue('horizontal');
+  const mode = await page.evaluate(() => window.__mindmap.getLayout());
+  expect(mode).toBe('horizontal');
+});
+
+test('radial layout keeps the root and five branches visible', async ({ page }) => {
+  await page.selectOption('#layout-mode', 'radial');
+  await expect.poll(() => page.evaluate(() => window.__mindmap.getLayout())).toBe('radial');
+  await page.waitForTimeout(400);
+
+  await expect(page.locator('g.node.root')).toBeVisible();
+  for (const label of ['Governance', 'Standing Rules', 'Delivery Workflow', 'Environments & Drives', 'Apps & Interfaces']) {
+    await expect(node(page, label)).toBeVisible();
+  }
+  await expect(page.locator('path.link').first()).toBeVisible();
+});
+
+test('radial layout survives a reset view', async ({ page }) => {
+  await page.selectOption('#layout-mode', 'radial');
+  await page.waitForTimeout(400);
+  await page.locator('#reset-view').click();
+  await page.waitForTimeout(400);
+
+  await expect(page.locator('g.node.root')).toBeVisible();
+  await expect(node(page, 'Governance')).toBeVisible();
+  const mode = await page.evaluate(() => window.__mindmap.getLayout());
+  expect(mode).toBe('radial');
+});
+
+test('switching back to horizontal restores toggle interactions', async ({ page }) => {
+  await page.selectOption('#layout-mode', 'radial');
+  await page.waitForTimeout(400);
+  await page.selectOption('#layout-mode', 'horizontal');
+  await expect.poll(() => page.evaluate(() => window.__mindmap.getLayout())).toBe('horizontal');
+  await page.waitForTimeout(400);
+
+  const govChild = node(page, 'All AI providers');
+  await expect(govChild).toHaveCount(0);
+  await page.evaluate(() => {
+    const ok = window.__mindmap.toggleByTitle('Governance');
+    if (!ok) throw new Error('toggleByTitle Governance failed');
+  });
+  await expect(govChild).toBeVisible();
+  await page.evaluate(() => window.__mindmap.toggleByTitle('Governance'));
+  await expect(govChild).toHaveCount(0);
+});
+
+test('layout switch completes under 500ms', async ({ page }) => {
+  const elapsed = await page.evaluate(() => {
+    const t0 = performance.now();
+    window.__mindmap.setLayout('radial');
+    return performance.now() - t0;
+  });
+  expect(elapsed).toBeGreaterThanOrEqual(0);
+  expect(elapsed).toBeLessThan(500);
+});
+
+test('expand-all under radial stays interactive', async ({ page }) => {
+  await page.selectOption('#layout-mode', 'radial');
+  await page.waitForTimeout(400);
+  await page.locator('#expand').click();
+  await page.waitForTimeout(500);
+
+  await expect(node(page, 'Reserve ports before binding')).toBeVisible();
+  await page.evaluate(() => window.__mindmap.selectByTitle('Reserve ports before binding'));
+  await expect(page.locator('#detail-title')).toHaveText('Reserve ports before binding');
+  await expect(node(page, 'Reserve ports before binding')).toHaveClass(/active/);
+});
