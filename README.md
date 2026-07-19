@@ -38,7 +38,7 @@ Version 1 maps:
 4. Drives and environment isolation
 5. Machine apps and agent interfaces
 
-It includes the current `CONSCIOUS.md` rules covering safety, ports, environment-specific databases, CSS authentication, evidence-gated promotion, activity documentation, E2E hires, the Playwright execution slot, DEV-domain login, reviewer sign-off before push, and **Cloudflare Workers AI credentials via env** (rule **#19**).
+It includes the current `CONSCIOUS.md` rules covering safety, ports, environment-specific databases, CSS authentication, evidence-gated promotion, activity documentation, E2E hires, the Playwright execution slot, DEV-domain login, reviewer sign-off before push, **Cloudflare Workers AI credentials via env** (rule **#19**), and **repository visibility inventory** (rule **#20**).
 
 ## Sources
 

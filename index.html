@@ -637,7 +637,8 @@
             },
             { title: "Reviewer GO before push", icon: "⇧", summary: "Readonly sign-off required for branch or tag push", detail: "Local commits are allowed, but no git push occurs without written Reviewer GO evidence.", source: SOURCES.review },
             { title: "Never commit secrets", icon: "●", summary: "Tokens, passwords, DB roles, and environment secrets stay out of git", detail: "Use approved environment or secret locations and redact activity records.", source: SOURCES.access },
-            { title: "Cloudflare Workers AI via env", icon: "AI", summary: "CLOUDFLARE_ACCOUNT_ID + CLOUDFLARE_WORKERS_AI_TOKEN (CONSCIOUS #19)", detail: "Load from Windows User env or workflow/secrets/cloudflare-workers-ai.env. Keep separate from Zone Edit DNS token. Never commit. Verify with tokens/verify then a sample ai/run call.", source: "E:\\MyAgent\\workflow\\cloudflare-workers-ai.md" }
+            { title: "Cloudflare Workers AI via env", icon: "AI", summary: "CLOUDFLARE_ACCOUNT_ID + CLOUDFLARE_WORKERS_AI_TOKEN (CONSCIOUS #19)", detail: "Load from Windows User env or workflow/secrets/cloudflare-workers-ai.env. Keep separate from Zone Edit DNS token. Never commit. Verify with tokens/verify then a sample ai/run call.", source: "E:\\MyAgent\\workflow\\cloudflare-workers-ai.md" },
+            { title: "Repository visibility inventory", icon: "⎇", summary: "Track PUBLIC / PRIVATE / INTERNAL for every owner repo (CONSCIOUS #20)", detail: "Refresh workflow/repos/REGISTRY.md and registry.json from authenticated gh metadata after create, visibility, archive, rename, transfer, delete, or default-branch changes. Never invent visibility from clone URLs.", source: "E:\\MyAgent\\workflow\\repos\\README.md" }
           ]
         },
         {
