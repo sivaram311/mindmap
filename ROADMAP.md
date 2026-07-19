@@ -2,7 +2,7 @@
 
 **Project**: [sivaram311/mindmap](https://github.com/sivaram311/mindmap)  
 **Goal**: Evolve the static vanilla JS mindmap into a powerful, interactive D3.js visualization while keeping it lightweight, offline-first, and aligned with Machine AI Operating Model principles.  
-**Status**: Phase 2 complete · Phase 3 Workstream C and initial Phase 4 docs complete (July 19, 2026) — see [PHASE-3-PLAN.md](PHASE-3-PLAN.md)
+**Status**: Phase 3 complete on `feature/phase3-advanced` (July 19, 2026) — A/B/C + E2E 108/108 — see [PHASE-3-PLAN.md](PHASE-3-PLAN.md)
 **Estimated Effort**: 1–2 weeks (part-time)
 
 ## Why D3.js?
@@ -69,20 +69,20 @@
 
 **Key Tasks**:
 
-- [ ] **A** Export SVG / PNG / Markdown / JSON (offline, no CDN)
-- [ ] **A** LocalStorage persistence + `#reset-state` (distinct from `#reset-view`)
-- [ ] **B** Layout modes: horizontal (default) + radial; optional cluster; **defer force-directed**
-- [ ] **B** Viewport culling / transition throttling for 200+ nodes
+- [x] **A** Export SVG / PNG / Markdown / JSON (offline, no CDN)
+- [x] **A** LocalStorage persistence + `#reset-state` (distinct from `#reset-view`)
+- [x] **B** Layout modes: horizontal (default) + radial; optional cluster; **defer force-directed**
+- [x] **B** Transition throttling for 200+ nodes (viewport culling deferred)
 - [x] **C** Inline editing mode (add / edit / delete; color + source)
 - [x] **C** ARIA tree + arrow-key navigation
 - [ ] Integration hooks for live markdown sources (later)
-- [ ] Playwright coverage for A/B/C (serialized runner, CONSCIOUS #15)
+- [x] Playwright coverage for A/B/C (serialized runner, CONSCIOUS #15) — 108/108, slot `e2e-mindmap-phase3-2026-07-19`
 
-**Milestone 3 – "Feature-Rich Visualization"** (Target: July 25–28)
+**Milestone 3 – "Feature-Rich Visualization"** (July 19, 2026)
 
 - Export and editing functional
-- At least 2 layout options
-- Updated Playwright E2E covering new interactions
+- At least 2 layout options (horizontal / radial / cluster)
+- Updated Playwright E2E covering new interactions — **108/108 PASS**
 - **Deliverable**: Comprehensive release with docs
 - **Merge order:** A → B → C → full E2E → Reviewer GO → push
 

@@ -1752,8 +1752,13 @@
     deleteNodeButton.addEventListener("click", () => deleteNode(selectedNode()));
 
     document.addEventListener("keydown", (event) => {
-      const typing = event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement;
-      const editingField = typing && event.target !== search;
+      const active = document.activeElement;
+      const typing = event.target instanceof HTMLInputElement
+        || event.target instanceof HTMLTextAreaElement
+        || active instanceof HTMLInputElement
+        || active instanceof HTMLTextAreaElement
+        || (active && active.tagName === "SELECT");
+      const editingField = typing && active !== search && event.target !== search;
       if (event.key === "/" && !typing) {
         event.preventDefault();
         search.focus();

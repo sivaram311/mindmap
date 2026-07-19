@@ -1,7 +1,7 @@
 # Phase 3–4 Implementation Plan
 
 **Project:** [sivaram311/mindmap](https://github.com/sivaram311/mindmap)  
-**Status:** In progress (July 19, 2026) — Workstream C complete on its isolated branch; A/B and integrated E2E remain
+**Status:** Complete on `feature/phase3-advanced` (July 19, 2026) — A + B + C merged; E2E **108/108** PASS; awaiting Reviewer GO → push
 **Constraints:** Offline `file://`, zero-build, vendored D3 only, CONSCIOUS #12 / #15 / #17
 
 Planned in parallel by three workstreams. Merge order: **A → B → C → docs/E2E → Reviewer GO → push**.
@@ -52,7 +52,7 @@ Call `saveState()` from `toggleNode` / `setExpanded`, `selectNode`, `nodeDrag` e
 
 ## Workstream B — Layout Modes & Performance
 
-**Status:** Implemented (July 19, 2026) on branch `feat/phase3-b-layout-modes` — awaiting single serialized E2E run (parent-owned, CONSCIOUS #15) and Reviewer GO. APIs kept additive for merge after A.
+**Status:** Implemented and integrated (July 19, 2026). Serialized E2E covered on `feature/phase3-advanced` (slot `e2e-mindmap-phase3-2026-07-19`, 108/108).
 
 ### Scope
 ≥2 hierarchical layouts. **Defer force-directed** (fights collapse/`_children` + drag; poor scale).
@@ -76,7 +76,7 @@ Delivered: transition throttling — joins skip the tween above `PERF_NODE_LIMIT
 - `applyLayout(root)` unifies the coordinate convention (`d.y` = screen X, `d.x` = screen Y); `linkPath(s,d)` dispatches cubic vs `d3.linkRadial`.
 - `#layout-mode` toolbar select; `_drag*` cleared and disabled off horizontal; `__mindmap.setLayout` / `getLayout` exposed (additive).
 
-### E2E (append) — authored, not yet run (parent-owned serialized runner)
+### E2E (append) — executed in parent serialized suite
 1. Layout switcher visible / default horizontal
 2. Radial keeps root + five branches
 3. Radial + reset view still visible
@@ -90,8 +90,8 @@ Delivered: transition throttling — joins skip the tween above `PERF_NODE_LIMIT
 
 **Depends on A’s state store** — extend envelope; no second persistence path.
 
-**Status:** Complete on `workstream-c-editing-a11y` (static checks only).
-Versioned tree-change hooks are additive; the A → C integration must restore
+**Status:** Implemented and integrated (July 19, 2026). Tree snapshot restores before D3 hierarchy; E2E covered in the 108/108 suite.
+Versioned tree-change hooks are additive; the A → C integration restores
 the tree snapshot before D3 hierarchy construction.
 
 ### Editing

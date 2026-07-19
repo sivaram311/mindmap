@@ -5,7 +5,7 @@ An interactive, zero-build D3.js mind map of the workflows and standing orders f
 **Repo:** [github.com/sivaram311/mindmap](https://github.com/sivaram311/mindmap)  
 **Sandbox path:** `E:\MyWorkspace\sandbox\mindmap`  
 **Port / CSS / DB:** none — static `file://` UI only  
-**Roadmap:** [ROADMAP.md](ROADMAP.md) (Phase 2 complete · Phase 3 Workstream C complete)
+**Roadmap:** [ROADMAP.md](ROADMAP.md) (Phase 3 advanced features integrated · [plan](PHASE-3-PLAN.md))
 
 ## Open
 
@@ -79,7 +79,7 @@ before constructing the D3 hierarchy; no second local-storage path is used.
 
 ## E2E
 
-Evidence: [`e2e/RESULTS.md`](e2e/RESULTS.md) — 39 tests across 3 viewports (Realme / desktop / tablet), including the `<500ms` initial-render target.
+Evidence: [`e2e/RESULTS.md`](e2e/RESULTS.md) — **108 tests** across 3 viewports (Realme / desktop / tablet), covering Phase 3 A/B/C plus the `<500ms` initial-render target.
 
 Playwright is a machine-wide serialized resource. Keep `workers: 1` and
 `fullyParallel: false`; never use a parallel project matrix against the single
