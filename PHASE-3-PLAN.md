@@ -1,7 +1,7 @@
 # Phase 3–4 Implementation Plan
 
 **Project:** [sivaram311/mindmap](https://github.com/sivaram311/mindmap)  
-**Status:** Planned (July 19, 2026) — docs only; implementation not started  
+**Status:** In progress (July 19, 2026) — Workstream C complete on its isolated branch; A/B and integrated E2E remain
 **Constraints:** Offline `file://`, zero-build, vendored D3 only, CONSCIOUS #12 / #15 / #17
 
 Planned in parallel by three workstreams. Merge order: **A → B → C → docs/E2E → Reviewer GO → push**.
@@ -76,6 +76,10 @@ Viewport culling after layout/zoom-end; transition generation token; keep search
 
 **Depends on A’s state store** — extend envelope; no second persistence path.
 
+**Status:** Complete on `workstream-c-editing-a11y` (static checks only).
+Versioned tree-change hooks are additive; the A → C integration must restore
+the tree snapshot before D3 hierarchy construction.
+
 ### Editing
 `#edit-mode` toggle → aside form for title / summary / detail / color / source. Add child, delete non-root (confirm). Persist via A’s `saveState` with `schemaVersion` + tree snapshot. `__mindmap.setEditMode|addChild|updateNode|deleteNode`.
 
@@ -87,6 +91,9 @@ Viewport culling after layout/zoom-end; transition generation token; keep search
 - `CONTRIBUTING.md` (zero-build, #12/#15/#17)
 - `.github/ISSUE_TEMPLATE/` bug + feature
 - README/CI note: Playwright `workers:1`, never parallel matrix against machine slot
+
+**Phase 4 docs status:** Complete (`CONTRIBUTING.md`, issue templates, schema
+contract, persistence integration notes, and serialized-runner guidance).
 
 ### E2E (append)
 Edit toggle/fields · edit persists · add child · delete non-root · reload keeps edits · ARIA tree · arrow focus · expand/collapse keys · shortcuts ignore edit fields

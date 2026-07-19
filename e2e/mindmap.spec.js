@@ -179,3 +179,114 @@ test('node drag records a custom offset and keeps links rendered', async ({ page
   await expect(node(page, 'Governance')).toHaveAttribute('transform', /translate\(/);
   await expect(page.locator('path.link').first()).toBeVisible();
 });
+
+// Workstream C — editing and accessibility. Browser execution remains owned by
+// the parent serialized runner (CONSCIOUS #15).
+test('edit mode reveals selected-node fields and saves changes', async ({ page }) => {
+  await page.evaluate(() => window.__mindmap.selectByTitle('Governance'));
+  await page.locator('#edit-mode').click();
+
+  await expect(page.locator('#edit-mode')).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.locator('#edit-form')).toBeVisible();
+  await expect(page.locator('#edit-title')).toHaveValue('Governance');
+
+  await page.locator('#edit-summary').fill('Updated governance summary');
+  await page.locator('#save-node').click();
+  await expect(page.locator('#detail-text')).toContainText('Machine policy');
+  await expect(node(page, 'Governance')).toContainText('Updated governance summary');
+});
+
+test('edited values survive tree rerenders in the current session', async ({ page }) => {
+  await page.evaluate(() => {
+    window.__mindmap.updateNode('Governance', {
+      title: 'Governance updated',
+      summary: 'Persistent across rerenders',
+      color: '#123456'
+    });
+    window.__mindmap.toggleByTitle('Governance updated');
+  });
+
+  await expect(node(page, 'Governance updated')).toContainText('Persistent across rerenders');
+  await expect(node(page, 'Governance updated').locator('.node-card')).toHaveAttribute('stroke', '#123456');
+});
+
+test('editing can add and delete a non-root child with confirmation', async ({ page }) => {
+  await page.evaluate(() => window.__mindmap.selectByTitle('Governance'));
+  await page.locator('#edit-mode').click();
+  await page.locator('#add-child').click();
+  await page.locator('#edit-title').fill('Temporary child');
+  await page.locator('#save-node').click();
+  await expect(node(page, 'Temporary child')).toBeVisible();
+
+  page.once('dialog', (dialog) => dialog.accept());
+  await page.locator('#delete-node').click();
+  await expect(node(page, 'Temporary child')).toHaveCount(0);
+  await expect(page.locator('#detail-title')).toHaveText('Governance');
+});
+
+test('root cannot be deleted', async ({ page }) => {
+  await page.locator('#edit-mode').click();
+  await expect(page.locator('#delete-node')).toBeDisabled();
+  expect(await page.evaluate(() => window.__mindmap.deleteNode('This Machine — AI Operating Model', false))).toBe(false);
+});
+
+test('reload restores edits when the Workstream A state store is integrated', async ({ page }) => {
+  const hasPersistence = await page.evaluate(
+    () => typeof window.__mindmap.saveState === 'function' || typeof window.saveState === 'function'
+  );
+  test.skip(!hasPersistence, 'Requires the A-owned state envelope after A → C integration');
+
+  await page.evaluate(() => window.__mindmap.updateNode('Governance', { title: 'Saved governance' }));
+  await page.reload();
+  await expect(node(page, 'Saved governance')).toBeVisible();
+  expect(await page.evaluate(() => window.__mindmap.MAP_SCHEMA_VERSION)).toBe(1);
+});
+
+test('map exposes ARIA tree semantics and roving tabindex', async ({ page }) => {
+  await expect(page.locator('#map')).toHaveAttribute('role', 'tree');
+  const root = page.locator('g.node.root');
+  await expect(root).toHaveAttribute('role', 'treeitem');
+  await expect(root).toHaveAttribute('aria-level', '1');
+  await expect(root).toHaveAttribute('aria-selected', 'true');
+  await expect(root).toHaveAttribute('aria-expanded', 'true');
+  await expect(root).toHaveAttribute('tabindex', '0');
+  await expect(page.locator('g.node[tabindex="0"]')).toHaveCount(1);
+});
+
+test('arrow, Home, and End keys move tree focus', async ({ page }) => {
+  const root = page.locator('g.node.root');
+  await root.focus();
+  await page.keyboard.press('ArrowDown');
+  await expect(node(page, 'Governance')).toBeFocused();
+  await page.keyboard.press('End');
+  await expect(node(page, 'Apps & Interfaces')).toBeFocused();
+  await page.keyboard.press('Home');
+  await expect(root).toBeFocused();
+});
+
+test('left and right arrows expand and collapse branches while preserving focus', async ({ page }) => {
+  const governance = node(page, 'Governance');
+  await governance.focus();
+  await expect(governance).toHaveAttribute('aria-expanded', 'false');
+  await page.keyboard.press('ArrowRight');
+  await expect(node(page, 'All AI providers')).toBeVisible();
+  await expect(governance).toBeFocused();
+  await expect(governance).toHaveAttribute('aria-expanded', 'true');
+  await page.keyboard.press('ArrowLeft');
+  await expect(node(page, 'All AI providers')).toHaveCount(0);
+  await expect(governance).toBeFocused();
+});
+
+test('global shortcuts do not fire while typing in edit fields', async ({ page }) => {
+  await page.locator('#search').evaluate((element) => { element.value = 'machine'; });
+  await page.locator('#edit-mode').click();
+  const title = page.locator('#edit-title');
+  await title.focus();
+  const before = await page.locator('.zoom-layer').getAttribute('transform');
+  await page.keyboard.type('/+0-');
+  await page.keyboard.press('Escape');
+  await expect(title).toHaveValue('This Machine — AI Operating Model/+0-');
+  await expect(page.locator('#search')).not.toBeFocused();
+  await expect(page.locator('#search')).toHaveValue('machine');
+  await expect(page.locator('.zoom-layer')).toHaveAttribute('transform', before);
+});
