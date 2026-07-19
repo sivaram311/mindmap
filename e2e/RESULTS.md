@@ -1,10 +1,10 @@
 # Mindmap Offline UI — E2E Test Evidence
 
-- **App under test:** `E:\MyWorkspace\sandbox\mindmap\index.html` (offline, `file://`)
-- **Role:** E2E hire (QA) + Builder fix follow-up
+- **App under test:** `E:\MyWorkspace\sandbox\mindmap\index.html` (offline, `file://`, D3 v7 vendored)
+- **Role:** E2E hire (QA)
 - **Date:** 2026-07-19
-- **Method:** Playwright 1.61.1 (Chromium, headless) via `@playwright/test`
-- **Runner policy:** single serialized runner (`workers: 1`); Playwright slot claimed before run and released after
+- **Method:** Playwright 1.61.1 (Chromium, headless)
+- **Runner policy:** single serialized runner (`workers: 1`); slot `e2e-mindmap-d3-phase1-2026-07-19` claimed/released `pass`
 - **Spec:** `e2e/mindmap.spec.js` · **Config:** `e2e/playwright.config.js`
 
 ## How to reproduce
@@ -15,7 +15,7 @@ $env:NODE_PATH="E:\MyWorkspace\sandbox\library\node_modules"
 node E:\MyWorkspace\sandbox\library\node_modules\@playwright\test\cli.js test --config=playwright.config.js
 ```
 
-## Viewports (validated sequentially)
+## Viewports
 
 | Preset | Size |
 |---|---|
@@ -23,27 +23,26 @@ node E:\MyWorkspace\sandbox\library\node_modules\@playwright\test\cli.js test --
 | Desktop | 1280 × 800 |
 | Tablet | 800 × 1280 |
 
-## Results — 24 tests, exit code 0
+## Results — 27 tests, exit code 0
 
 | # | Check | Result |
 |---|---|---|
-| 1 | Initial render: root, 5 branches, collapsed by default, default detail + source | **PASS** |
-| 2 | Branch expand/collapse via node click + Expand all / Collapse branches | **PASS** |
-| 3 | Search filters + highlights a match; no-results stays hidden | **PASS** |
-| 4 | Search no-results state for an unknown term | **PASS** |
-| 5 | Clearing search restores tree and removes highlights | **PASS** |
-| 6 | Search reveals matches across sibling branches | **PASS** |
-| 7 | Selecting a node updates detail title, text, and source | **PASS** |
-| 8 | Responsive usability: toolbar/search/detail reachable | **PASS** |
+| 1 | Initial render: SVG tree, root, 5 branches, collapsed deeper nodes, default detail | **PASS** |
+| 2 | Expand/collapse branch + Expand all / Collapse toolbar | **PASS** |
+| 3 | Search highlight (`match` + `tspan.mark`) | **PASS** |
+| 4 | Search no-results | **PASS** |
+| 5 | Clear search restores tree | **PASS** |
+| 6 | Cross-branch search (`ports`) walks collapsed `_children` | **PASS** |
+| 7 | Select node updates detail title/text/source | **PASS** |
+| 8 | Responsive toolbar/detail reachability | **PASS** |
+| 9 | Zoom layer + Reset view | **PASS** |
 
-## Defect history
+## Phase 1 notes
 
-### DEFECT-1 (fixed) — Search missed cross-branch matches
-
-- **Found:** first E2E hire run (`e2e-mindmap-2026-07-19`) — search used `children.some(visit)`, which short-circuits side-effecting recursion.
-- **Fix:** `children.map(visit).some(Boolean)` in `index.html` `filterTree()`.
-- **Retest:** session `e2e-mindmap-fix-2026-07-19` — 24/24 **PASS**, including cross-branch search for `ports`.
+- D3 loaded from `vendor/d3.v7.min.js` (offline-safe; no CDN at runtime).
+- Search uses `walkAll` over `children` and `_children` so collapsed matches are found and ancestors expanded.
+- Zoom filter ignores pointer events on `.node` so clicks toggle correctly.
 
 ## Verdict
 
-**PASS** — rendering, expand/collapse, search (including cross-branch), selection/detail, and responsive usability across all three required viewports.
+**PASS** — D3 Foundation (Milestone 1) across all three required viewports.

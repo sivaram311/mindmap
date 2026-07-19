@@ -3,14 +3,13 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Interactive map of the AI operating model for this machine.">
+  <meta name="description" content="Interactive D3 map of the AI operating model for this machine.">
   <title>Machine AI Operating Model</title>
   <style>
     :root {
       color-scheme: dark;
       --bg: #07111f;
       --panel: rgba(12, 25, 43, 0.88);
-      --panel-strong: #10233b;
       --line: #38506e;
       --text: #edf6ff;
       --muted: #9fb3c8;
@@ -108,87 +107,113 @@
     }
 
     .map-shell {
-      overflow: auto;
-      padding: clamp(1rem, 3vw, 2.5rem);
-    }
-
-    .map {
-      min-width: 50rem;
-      padding-bottom: 4rem;
-    }
-
-    .tree, .tree ul {
       position: relative;
-      margin: 0;
-      padding: 0;
-      list-style: none;
+      min-height: 0;
+      overflow: hidden;
     }
 
-    .tree ul {
-      margin-left: 2rem;
-      padding-left: 1.6rem;
-      border-left: 1px solid var(--line);
+    #map {
+      width: 100%;
+      height: calc(100vh - 4.9rem);
+      min-height: 28rem;
+      cursor: grab;
     }
 
-    .tree li {
-      position: relative;
-      padding: 0.42rem 0;
+    #map:active { cursor: grabbing; }
+
+    #map svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+      touch-action: none;
     }
 
-    .tree ul > li::before {
-      position: absolute;
-      top: 1.55rem;
-      left: -1.6rem;
-      width: 1.6rem;
-      border-top: 1px solid var(--line);
-      content: "";
+    .link {
+      fill: none;
+      stroke: var(--line);
+      stroke-width: 1.5;
+      opacity: 0.85;
     }
 
     .node {
-      display: inline-grid;
-      grid-template-columns: auto 1fr auto;
-      gap: 0.7rem;
-      align-items: center;
-      width: min(42rem, calc(100vw - 34rem));
-      min-width: 24rem;
-      padding: 0.78rem 0.9rem;
-      text-align: left;
-      border: 1px solid var(--line);
-      border-left: 4px solid var(--node-color, var(--accent));
-      border-radius: 0.8rem;
-      background: linear-gradient(125deg, rgba(16, 35, 59, 0.96), rgba(10, 23, 40, 0.96));
-      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.16);
       cursor: pointer;
     }
 
-    .node:hover, .node.active {
-      border-color: var(--node-color, var(--accent));
-      transform: translateY(-1px);
+    .node-card {
+      fill: #0f2238;
+      stroke-width: 1.5;
+      filter: drop-shadow(0 8px 18px rgba(0, 0, 0, 0.28));
     }
 
-    .node.root {
-      width: min(46rem, calc(100vw - 34rem));
-      padding: 1rem 1.15rem;
-      border-left-width: 5px;
-      background: linear-gradient(125deg, rgba(23, 59, 83, 0.98), rgba(27, 31, 75, 0.98));
-      box-shadow: var(--shadow);
+    .node.root .node-card {
+      fill: #173b53;
     }
 
-    .icon { font-size: 1.25rem; }
-    .node-title { display: block; font-weight: 720; }
-    .node-summary { display: block; margin-top: 0.12rem; color: var(--muted); font-size: 0.82rem; }
-    .chevron { color: var(--muted); transition: transform 0.18s ease; }
-    .collapsed > .node .chevron { transform: rotate(-90deg); }
-    .collapsed > ul { display: none; }
+    .node.active .node-card {
+      stroke-width: 2.5;
+      filter: drop-shadow(0 10px 22px rgba(98, 217, 255, 0.18));
+    }
+
+    .node.match .node-card {
+      stroke-width: 2.25;
+    }
+
+    .node-title {
+      fill: var(--text);
+      font-weight: 700;
+      font-size: 13px;
+    }
+
+    .node-summary {
+      fill: var(--muted);
+      font-size: 11px;
+    }
+
+    .node-title mark,
+    .node-summary mark {
+      fill: #ffe08a;
+      font-weight: 800;
+    }
+
+    .node-icon {
+      fill: var(--text);
+      font-size: 14px;
+      dominant-baseline: central;
+    }
+
+    .node-toggle {
+      fill: var(--muted);
+      font-size: 11px;
+      dominant-baseline: central;
+    }
+
+    .hint {
+      position: absolute;
+      left: 1rem;
+      bottom: 1rem;
+      z-index: 2;
+      padding: 0.4rem 0.65rem;
+      color: var(--muted);
+      border: 1px solid var(--line);
+      border-radius: 0.55rem;
+      background: rgba(8, 19, 34, 0.78);
+      font-size: 0.72rem;
+      pointer-events: none;
+    }
 
     .no-results {
       display: none;
-      max-width: 32rem;
-      margin: 2rem;
+      position: absolute;
+      z-index: 3;
+      top: 1rem;
+      left: 1rem;
+      max-width: 22rem;
+      margin: 0;
       padding: 1rem;
       color: var(--muted);
       border: 1px dashed var(--line);
       border-radius: 0.8rem;
+      background: rgba(8, 19, 34, 0.92);
     }
 
     aside {
@@ -256,19 +281,12 @@
       background: currentColor;
     }
 
-    mark {
-      color: var(--text);
-      border-radius: 0.2rem;
-      background: rgba(255, 204, 102, 0.35);
-    }
-
     @media (max-width: 900px) {
       header { align-items: flex-start; flex-direction: column; }
       .toolbar { justify-content: flex-start; width: 100%; }
       .search { flex: 1; width: auto; min-width: 10rem; }
       main { grid-template-columns: 1fr; }
-      .map { min-width: 39rem; }
-      .node, .node.root { width: 32rem; min-width: 0; }
+      #map { height: 60vh; min-height: 22rem; }
       aside {
         position: relative;
         top: auto;
@@ -288,19 +306,21 @@
     <header>
       <div class="brand">
         <h1>Machine AI Operating Model</h1>
-        <p>Living awareness map · source files remain authoritative</p>
+        <p>D3 living awareness map · source files remain authoritative</p>
       </div>
       <div class="toolbar">
         <input id="search" class="search" type="search" placeholder="Search rules, roles, paths…" aria-label="Search mind map">
         <button id="expand" class="control" type="button">Expand all</button>
         <button id="collapse" class="control" type="button">Collapse branches</button>
+        <button id="reset-view" class="control" type="button">Reset view</button>
       </div>
     </header>
 
     <main>
       <section class="map-shell" aria-label="Mind map">
-        <div id="map" class="map"></div>
+        <div id="map" class="map" role="img" aria-label="Hierarchical operating model tree"></div>
         <p id="no-results" class="no-results">No matching nodes. Try a rule name, role, environment, or file path.</p>
+        <div class="hint">Scroll to zoom · drag to pan · click node to select / toggle</div>
       </section>
 
       <aside aria-live="polite">
@@ -323,6 +343,7 @@
     </main>
   </div>
 
+  <script src="vendor/d3.v7.min.js"></script>
   <script>
     const SOURCES = {
       conscious: "E:\\MyAgent\\workflow\\CONSCIOUS.md",
@@ -476,109 +497,372 @@
       ]
     };
 
-    const map = document.querySelector("#map");
+    const NODE_W = 250;
+    const NODE_H = 58;
+    const DX = NODE_H + 28;
+    const DY = NODE_W + 54;
+
+    const mapEl = document.querySelector("#map");
     const search = document.querySelector("#search");
     const noResults = document.querySelector("#no-results");
     const detailTitle = document.querySelector("#detail-title");
     const detailText = document.querySelector("#detail-text");
     const detailSource = document.querySelector("#detail-source");
     const copyButton = document.querySelector("#copy");
-    let selectedButton = null;
 
-    function createNode(node, depth = 0) {
-      const li = document.createElement("li");
-      li.dataset.search = [node.title, node.summary, node.detail, node.source].join(" ").toLowerCase();
-      li.style.setProperty("--node-color", node.color || "var(--node-color)");
+    const root = d3.hierarchy(mapData);
+    root.x0 = 0;
+    root.y0 = 0;
 
-      const button = document.createElement("button");
-      button.type = "button";
-      button.className = `node${depth === 0 ? " root" : ""}`;
-      button.innerHTML = `
-        <span class="icon" aria-hidden="true">${node.icon || "·"}</span>
-        <span>
-          <span class="node-title">${node.title}</span>
-          <span class="node-summary">${node.summary || ""}</span>
-        </span>
-        <span class="chevron" aria-hidden="true">${node.children?.length ? "⌄" : "›"}</span>
-      `;
-
-      button.addEventListener("click", () => {
-        if (selectedButton) selectedButton.classList.remove("active");
-        selectedButton = button;
-        button.classList.add("active");
-        detailTitle.textContent = node.title;
-        detailText.textContent = node.detail || node.summary || "";
-        detailSource.textContent = node.source || "No direct source";
-        if (node.children?.length) li.classList.toggle("collapsed");
-      });
-
-      li.appendChild(button);
-
-      if (node.children?.length) {
-        const ul = document.createElement("ul");
-        node.children.forEach(child => ul.appendChild(createNode({ ...child, color: child.color || node.color }, depth + 1)));
-        li.appendChild(ul);
+    root.descendants().forEach((d, i) => {
+      d.id = i;
+      d._color = d.data.color || (d.parent && d.parent._color) || "#62d9ff";
+      if (d.depth >= 1 && d.children) {
+        d._children = d.children;
+        d.children = null;
       }
+    });
 
-      return li;
+    let selectedId = root.id;
+    let searchQuery = "";
+
+    const svg = d3.select("#map").append("svg")
+      .attr("aria-hidden", "false");
+
+    const gZoom = svg.append("g").attr("class", "zoom-layer");
+    const gLinks = gZoom.append("g").attr("class", "links");
+    const gNodes = gZoom.append("g").attr("class", "nodes");
+
+    const zoom = d3.zoom()
+      .scaleExtent([0.35, 2.5])
+      .filter((event) => {
+        if (event.type === "wheel") return true;
+        if (event.target && event.target.closest && event.target.closest(".node")) return false;
+        return event.button === 0;
+      })
+      .on("zoom", (event) => gZoom.attr("transform", event.transform));
+
+    svg.call(zoom);
+
+    const tree = d3.tree().nodeSize([DX, DY]);
+
+    function searchText(d) {
+      const n = d.data;
+      return [n.title, n.summary, n.detail, n.source].join(" ").toLowerCase();
     }
 
-    const rootList = document.createElement("ul");
-    rootList.className = "tree";
-    rootList.appendChild(createNode(mapData));
-    map.appendChild(rootList);
-
-    function setCollapsed(collapse) {
-      document.querySelectorAll(".tree li").forEach((li, index) => {
-        if (!li.querySelector(":scope > ul")) return;
-        li.classList.toggle("collapsed", collapse && index > 0);
-      });
+    function walkAll(d, fn) {
+      fn(d);
+      const kids = d.children || d._children || [];
+      kids.forEach((child) => walkAll(child, fn));
     }
 
-    function restoreLabels() {
-      document.querySelectorAll(".node-title, .node-summary").forEach(el => {
-        if (el.dataset.original) el.innerHTML = el.dataset.original;
-      });
-    }
-
-    function highlight(el, query) {
-      if (!el.dataset.original) el.dataset.original = el.innerHTML;
-      const text = el.textContent;
-      if (!query) {
-        el.innerHTML = el.dataset.original;
-        return;
-      }
+    function highlightText(text, query) {
+      if (!query) return text;
       const index = text.toLowerCase().indexOf(query);
-      if (index === -1) return;
-      el.innerHTML = `${text.slice(0, index)}<mark>${text.slice(index, index + query.length)}</mark>${text.slice(index + query.length)}`;
+      if (index === -1) return text;
+      return `${text.slice(0, index)}<tspan class="mark">${text.slice(index, index + query.length)}</tspan>${text.slice(index + query.length)}`;
     }
 
-    function filterTree() {
-      const query = search.value.trim().toLowerCase();
-      restoreLabels();
+    function nodeMatches(d, query) {
+      return !query || searchText(d).includes(query);
+    }
 
-      function visit(li) {
-        const children = [...li.querySelectorAll(":scope > ul > li")];
-        const childMatch = children.map(visit).some(Boolean);
-        const ownMatch = !query || li.dataset.search.includes(query);
-        const visible = ownMatch || childMatch;
-        li.hidden = !visible;
-        if (query && visible) li.classList.remove("collapsed");
-        if (ownMatch && query) {
-          li.querySelectorAll(":scope > .node .node-title, :scope > .node .node-summary")
-            .forEach(el => highlight(el, query));
+    function collectMatchIds(query) {
+      if (!query) return null;
+      const ids = new Set();
+      walkAll(root, (d) => {
+        if (!nodeMatches(d, query)) return;
+        let cur = d;
+        while (cur) {
+          ids.add(cur.id);
+          cur = cur.parent;
         }
-        return visible;
-      }
-
-      const root = rootList.firstElementChild;
-      const found = visit(root);
-      noResults.style.display = found ? "none" : "block";
+      });
+      return ids;
     }
 
-    search.addEventListener("input", filterTree);
-    document.querySelector("#expand").addEventListener("click", () => setCollapsed(false));
-    document.querySelector("#collapse").addEventListener("click", () => setCollapsed(true));
+    function expandAncestorsForMatches(query) {
+      if (!query) return;
+      walkAll(root, (d) => {
+        if (!nodeMatches(d, query)) return;
+        let cur = d.parent;
+        while (cur) {
+          if (cur._children) {
+            cur.children = cur._children;
+            cur._children = null;
+          }
+          cur = cur.parent;
+        }
+      });
+    }
+
+    function setExpanded(expand) {
+      if (expand) {
+        root.each((d) => {
+          if (d._children) {
+            d.children = d._children;
+            d._children = null;
+          }
+        });
+      } else {
+        // Keep the five top-level branches visible; collapse everything deeper.
+        root.each((d) => {
+          if (d.depth >= 1 && d.children) {
+            d._children = d.children;
+            d.children = null;
+          }
+        });
+        if (root._children && !root.children) {
+          root.children = root._children;
+          root._children = null;
+        }
+      }
+      update(root);
+    }
+
+    function selectNode(d) {
+      selectedId = d.id;
+      detailTitle.textContent = d.data.title;
+      detailText.textContent = d.data.detail || d.data.summary || "";
+      detailSource.textContent = d.data.source || "No direct source";
+      gNodes.selectAll("g.node").classed("active", (n) => n.id === selectedId);
+    }
+
+    function toggleNode(d) {
+      if (d.children) {
+        d._children = d.children;
+        d.children = null;
+      } else if (d._children) {
+        d.children = d._children;
+        d._children = null;
+      }
+      update(d);
+    }
+
+    function diagonal(s, d) {
+      return `M${s.y},${s.x}C${(s.y + d.y) / 2},${s.x} ${(s.y + d.y) / 2},${d.x} ${d.y},${d.x}`;
+    }
+
+    function update(source) {
+      const matchIds = collectMatchIds(searchQuery);
+      const found = !searchQuery || (matchIds && matchIds.size > 0);
+      noResults.style.display = found ? "none" : "block";
+
+      const treeRoot = tree(root);
+      const nodes = treeRoot.descendants().filter((d) => !matchIds || matchIds.has(d.id));
+      const links = treeRoot.links().filter((l) => !matchIds || (matchIds.has(l.source.id) && matchIds.has(l.target.id)));
+
+      nodes.forEach((d) => {
+        d.y = d.depth * DY;
+      });
+
+      const link = gLinks.selectAll("path.link")
+        .data(links, (d) => d.target.id);
+
+      link.join(
+        (enter) => enter.append("path")
+          .attr("class", "link")
+          .attr("d", () => {
+            const o = { x: source.x0 ?? source.x, y: source.y0 ?? source.y };
+            return diagonal(o, o);
+          })
+          .call((enter) => enter.transition().duration(280).attr("d", (d) => diagonal(d.source, d.target))),
+        (updateSel) => updateSel.transition().duration(280).attr("d", (d) => diagonal(d.source, d.target)),
+        (exit) => exit.transition().duration(220)
+          .attr("d", () => {
+            const o = { x: source.x, y: source.y };
+            return diagonal(o, o);
+          })
+          .remove()
+      );
+
+      const node = gNodes.selectAll("g.node")
+        .data(nodes, (d) => d.id);
+
+      const nodeEnter = node.enter().append("g")
+        .attr("class", (d) => `node${d.depth === 0 ? " root" : ""}`)
+        .attr("data-title", (d) => d.data.title)
+        .attr("data-depth", (d) => d.depth)
+        .attr("transform", () => `translate(${source.y0 ?? source.y},${source.x0 ?? source.x})`)
+        .on("click", (event, d) => {
+          event.stopPropagation();
+          selectNode(d);
+          if (d.children || d._children) toggleNode(d);
+        });
+
+      nodeEnter.append("rect")
+        .attr("class", "node-card")
+        .attr("x", -18)
+        .attr("y", -NODE_H / 2)
+        .attr("rx", 10)
+        .attr("ry", 10)
+        .attr("width", NODE_W)
+        .attr("height", NODE_H)
+        .attr("role", "button");
+
+      // Invisible hit target so Playwright / touch can click nodes even when zoomed small.
+      nodeEnter.append("rect")
+        .attr("class", "node-hit")
+        .attr("x", -18)
+        .attr("y", -NODE_H / 2)
+        .attr("width", NODE_W)
+        .attr("height", NODE_H)
+        .attr("fill", "transparent");
+
+      nodeEnter.append("text")
+        .attr("class", "node-icon")
+        .attr("x", -2)
+        .attr("y", 0)
+        .text((d) => d.data.icon || "·");
+
+      nodeEnter.append("text")
+        .attr("class", "node-title")
+        .attr("x", 18)
+        .attr("y", -8);
+
+      nodeEnter.append("text")
+        .attr("class", "node-summary")
+        .attr("x", 18)
+        .attr("y", 12);
+
+      nodeEnter.append("text")
+        .attr("class", "node-toggle")
+        .attr("x", NODE_W - 30)
+        .attr("y", 0);
+
+      const nodeMerge = nodeEnter.merge(node);
+
+      nodeMerge
+        .attr("data-title", (d) => d.data.title)
+        .classed("root", (d) => d.depth === 0)
+        .classed("active", (d) => d.id === selectedId)
+        .classed("match", (d) => !!searchQuery && nodeMatches(d, searchQuery))
+        .transition().duration(280)
+        .attr("transform", (d) => `translate(${d.y},${d.x})`);
+
+      nodeMerge.select(".node-card")
+        .attr("stroke", (d) => d._color);
+
+      nodeMerge.select(".node-title")
+        .html((d) => highlightText(d.data.title, searchQuery));
+
+      nodeMerge.select(".node-summary")
+        .html((d) => {
+          const summary = d.data.summary || "";
+          const clipped = summary.length > 42 ? `${summary.slice(0, 42)}…` : summary;
+          return highlightText(clipped, searchQuery);
+        });
+
+      nodeMerge.select(".node-toggle")
+        .text((d) => (d._children ? "+" : d.children ? "−" : "›"));
+
+      // Style mark tspans (SVG uses fill, not HTML mark)
+      nodeMerge.selectAll("tspan.mark").attr("fill", "#ffe08a").attr("font-weight", 800);
+
+      node.exit().transition().duration(220)
+        .attr("transform", () => `translate(${source.y},${source.x})`)
+        .remove();
+
+      nodes.forEach((d) => {
+        d.x0 = d.x;
+        d.y0 = d.y;
+      });
+    }
+
+    function fitView(padding = 48) {
+      const bounds = gZoom.node().getBBox();
+      const width = mapEl.clientWidth || 800;
+      const height = mapEl.clientHeight || 600;
+      const fullWidth = Math.max(bounds.width, 1);
+      const fullHeight = Math.max(bounds.height, 1);
+      const scale = Math.min(
+        1.15,
+        Math.max(0.25, 0.92 / Math.max(fullWidth / (width - padding * 2), fullHeight / (height - padding * 2)))
+      );
+      const tx = (width - fullWidth * scale) / 2 - bounds.x * scale;
+      const ty = (height - fullHeight * scale) / 2 - bounds.y * scale;
+      svg.transition().duration(280).call(zoom.transform, d3.zoomIdentity.translate(tx, ty).scale(scale));
+    }
+
+    function centerOn(d) {
+      const width = mapEl.clientWidth || 800;
+      const height = mapEl.clientHeight || 600;
+      const scale = 0.95;
+      const tx = width / 2 - d.y * scale - NODE_W / 3;
+      const ty = height / 2 - d.x * scale;
+      svg.transition().duration(280).call(zoom.transform, d3.zoomIdentity.translate(tx, ty).scale(scale));
+    }
+
+    function applySearch() {
+      searchQuery = search.value.trim().toLowerCase();
+      if (searchQuery) expandAncestorsForMatches(searchQuery);
+      else {
+        // restore default collapsed branches when clearing search
+        root.descendants().forEach((d) => {
+          if (d.depth >= 1 && d.children) {
+            d._children = d.children;
+            d.children = null;
+          }
+        });
+        if (root._children && !root.children) {
+          root.children = root._children;
+          root._children = null;
+        }
+      }
+      update(root);
+      if (searchQuery) fitView();
+    }
+
+    search.addEventListener("input", applySearch);
+    document.querySelector("#expand").addEventListener("click", () => {
+      setExpanded(true);
+      window.setTimeout(() => fitView(), 300);
+    });
+    document.querySelector("#collapse").addEventListener("click", () => {
+      search.value = "";
+      searchQuery = "";
+      setExpanded(false);
+      window.setTimeout(() => fitView(), 300);
+    });
+    document.querySelector("#reset-view").addEventListener("click", () => fitView());
+
+    // Expose helpers for E2E / debugging without a build step.
+    window.__mindmap = {
+      fitView,
+      centerOn,
+      toggleByTitle(title) {
+        let found = null;
+        walkAll(root, (d) => {
+          if (d.data.title === title) found = d;
+        });
+        if (!found || !(found.children || found._children)) return false;
+        toggleNode(found);
+        selectNode(found);
+        return true;
+      },
+      selectByTitle(title) {
+        let found = null;
+        walkAll(root, (d) => {
+          if (d.data.title === title) found = d;
+        });
+        if (!found) return false;
+        if (found.parent) {
+          let cur = found.parent;
+          while (cur) {
+            if (cur._children) {
+              cur.children = cur._children;
+              cur._children = null;
+            }
+            cur = cur.parent;
+          }
+        }
+        update(found);
+        selectNode(found);
+        centerOn(found);
+        return true;
+      }
+    };
 
     copyButton.addEventListener("click", async () => {
       try {
@@ -590,7 +874,10 @@
       window.setTimeout(() => { copyButton.textContent = "Copy path"; }, 1400);
     });
 
-    setCollapsed(true);
+    selectNode(root);
+    update(root);
+    window.requestAnimationFrame(fitView);
+    window.addEventListener("resize", () => fitView());
   </script>
 </body>
 </html>

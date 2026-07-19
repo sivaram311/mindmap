@@ -1,19 +1,22 @@
 # Machine AI Operating Model
 
-An interactive, zero-build mind map of the workflows and standing orders followed by AI assistants on this machine.
+An interactive, zero-build D3.js mind map of the workflows and standing orders followed by AI assistants on this machine.
 
 **Repo:** [github.com/sivaram311/mindmap](https://github.com/sivaram311/mindmap)  
 **Sandbox path:** `E:\MyWorkspace\sandbox\mindmap`  
-**Port / CSS / DB:** none — static `file://` UI only
+**Port / CSS / DB:** none — static `file://` UI only  
+**Roadmap:** [ROADMAP.md](ROADMAP.md) (Phase 1 D3 Foundation complete)
 
 ## Open
 
-Open [`index.html`](index.html) directly in a browser. No server, package install, database, port reservation, or authentication is required.
+Open [`index.html`](index.html) directly in a browser. No server, package install, database, port reservation, or authentication is required. D3 is vendored at `vendor/d3.v7.min.js` so offline `file://` works without a CDN.
 
 The map supports:
 
-- Collapsible branches
-- Search across titles, descriptions, and source paths
+- D3 tree layout with SVG nodes and links
+- Zoom / pan (scroll + drag) and **Reset view**
+- Collapsible branches (`_children` pattern)
+- Search across titles, descriptions, and source paths (including collapsed nodes)
 - A details panel with the authoritative source path
 - Responsive desktop and mobile layouts
 
@@ -44,4 +47,15 @@ When a standing order changes, update its node in the `mapData` object inside `i
 
 ## Architecture
 
-The project intentionally contains no external dependencies. HTML, CSS, map data, rendering, search, and interactions are all contained in `index.html`, allowing it to work offline from the filesystem.
+| Piece | Location |
+|-------|----------|
+| UI + `mapData` + D3 render | `index.html` |
+| D3 v7 (offline) | `vendor/d3.v7.min.js` |
+| Enhancement plan | `ROADMAP.md` |
+| Playwright E2E | `e2e/` |
+
+No build step. Open the HTML file and use it.
+
+## E2E
+
+Evidence: [`e2e/RESULTS.md`](e2e/RESULTS.md) — 27 tests × 3 viewports (Realme / desktop / tablet).
