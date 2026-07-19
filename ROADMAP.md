@@ -2,7 +2,7 @@
 
 **Project**: [sivaram311/mindmap](https://github.com/sivaram311/mindmap)  
 **Goal**: Evolve the static vanilla JS mindmap into a powerful, interactive D3.js visualization while keeping it lightweight, offline-first, and aligned with Machine AI Operating Model principles.  
-**Status**: Phase 2 complete (July 19, 2026)
+**Status**: Phase 2 complete · Phase 3–4 **planned** (July 19, 2026) — see [PHASE-3-PLAN.md](PHASE-3-PLAN.md)
 **Estimated Effort**: 1–2 weeks (part-time)
 
 ## Why D3.js?
@@ -64,17 +64,19 @@
 ### Phase 3: Advanced Features & Extensibility
 
 **Duration**: 3–5 days  
-**Focus**: Unlock power-user capabilities.
+**Focus**: Unlock power-user capabilities.  
+**Plan:** [PHASE-3-PLAN.md](PHASE-3-PLAN.md) (Workstreams A–C, planned in parallel July 19)
 
 **Key Tasks**:
 
-- Export options (PNG, SVG, Markdown outline, JSON)
-- Inline editing mode (add/edit nodes, colors, sources)
-- Multiple layout modes (horizontal tree, radial, cluster, force-directed)
-- LocalStorage / JSON persistence for custom views
-- Integration hooks for live data (e.g., parse markdown sources)
-- Performance tuning for 200+ nodes
-- Accessibility improvements (ARIA labels, keyboard nav)
+- [ ] **A** Export SVG / PNG / Markdown / JSON (offline, no CDN)
+- [ ] **A** LocalStorage persistence + `#reset-state` (distinct from `#reset-view`)
+- [ ] **B** Layout modes: horizontal (default) + radial; optional cluster; **defer force-directed**
+- [ ] **B** Viewport culling / transition throttling for 200+ nodes
+- [ ] **C** Inline editing mode (add / edit / delete; color + source)
+- [ ] **C** ARIA tree + arrow-key navigation
+- [ ] Integration hooks for live markdown sources (later)
+- [ ] Playwright coverage for A/B/C (serialized runner, CONSCIOUS #15)
 
 **Milestone 3 – "Feature-Rich Visualization"** (Target: July 25–28)
 
@@ -82,23 +84,25 @@
 - At least 2 layout options
 - Updated Playwright E2E covering new interactions
 - **Deliverable**: Comprehensive release with docs
+- **Merge order:** A → B → C → full E2E → Reviewer GO → push
 
 ### Phase 4: Documentation, Testing & Maintenance
 
-**Duration**: Ongoing (1–2 days initial)
+**Duration**: Ongoing (1–2 days initial)  
+**Plan:** Workstream C in [PHASE-3-PLAN.md](PHASE-3-PLAN.md)
 
 **Key Tasks**:
 
-- Expand README with usage, architecture, and contribution guide
-- Full E2E coverage + visual regression tests
-- Optional: Web Component wrapper or minimal React version
-- Versioning strategy for `mapData` schema
-- GitHub Issues template for feedback
+- [ ] Expand README; add `CONTRIBUTING.md`
+- [ ] `MAP_SCHEMA_VERSION` + migrate-on-load
+- [ ] `.github/ISSUE_TEMPLATE/` (bug + feature)
+- [ ] CI note: Playwright `workers: 1` only; never parallel matrix vs machine slot
+- [ ] Optional later: Web Component wrapper; visual regression goldens
 
 **Milestone 4 – "Mature & Maintainable"** (Target: End of July 2026)
 
 - Public-ready repo
-- CI-friendly tests
+- CI-friendly tests (single runner)
 - Clear path for future contributors (including other agents)
 
 ## Success Criteria

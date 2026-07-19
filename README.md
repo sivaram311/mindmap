@@ -5,7 +5,7 @@ An interactive, zero-build D3.js mind map of the workflows and standing orders f
 **Repo:** [github.com/sivaram311/mindmap](https://github.com/sivaram311/mindmap)  
 **Sandbox path:** `E:\MyWorkspace\sandbox\mindmap`  
 **Port / CSS / DB:** none — static `file://` UI only  
-**Roadmap:** [ROADMAP.md](ROADMAP.md) (Phase 2 Polished Interactive Map complete)
+**Roadmap:** [ROADMAP.md](ROADMAP.md) (Phase 2 complete · [Phase 3–4 plan](PHASE-3-PLAN.md) ready)
 
 ## Open
 
