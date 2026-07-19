@@ -1,7 +1,7 @@
 # Phase 3–4 Implementation Plan
 
 **Project:** [sivaram311/mindmap](https://github.com/sivaram311/mindmap)  
-**Status:** Planned (July 19, 2026) — docs only; implementation not started  
+**Status:** Complete on `feature/phase3-advanced` (July 19, 2026) — A + B + C merged; E2E **108/108** PASS; awaiting Reviewer GO → push
 **Constraints:** Offline `file://`, zero-build, vendored D3 only, CONSCIOUS #12 / #15 / #17
 
 Planned in parallel by three workstreams. Merge order: **A → B → C → docs/E2E → Reviewer GO → push**.
@@ -9,6 +9,13 @@ Planned in parallel by three workstreams. Merge order: **A → B → C → docs/
 ---
 
 ## Workstream A — Export & Persistence
+
+**Status:** Implementation complete; browser specs appended for the parent-owned serialized run.
+
+- [x] Offline SVG / PNG / Markdown / JSON exports
+- [x] Title-keyed LocalStorage view-state persistence and separate reset-state behavior
+- [x] Compact export menu usable at 360px
+- [x] Test APIs and Workstream A Playwright specifications
 
 ### Scope
 Offline export (SVG / PNG / Markdown / JSON) and LocalStorage view-state restore. No new runtime deps.
@@ -45,6 +52,8 @@ Call `saveState()` from `toggleNode` / `setExpanded`, `selectNode`, `nodeDrag` e
 
 ## Workstream B — Layout Modes & Performance
 
+**Status:** Implemented and integrated (July 19, 2026). Serialized E2E covered on `feature/phase3-advanced` (slot `e2e-mindmap-phase3-2026-07-19`, 108/108).
+
 ### Scope
 ≥2 hierarchical layouts. **Defer force-directed** (fights collapse/`_children` + drag; poor scale).
 
@@ -60,9 +69,14 @@ Toolbar: `#layout-mode`. Clear `_drag*` on switch. Expose `__mindmap.setLayout` 
 `applyLayout(root)`, `linkPath(s,d)`, keep one `update()` join. Unify coordinate convention in `applyLayout` so `fitView` / `centerOn` / drag stay consistent.
 
 ### Performance (200+ nodes)
-Viewport culling after layout/zoom-end; transition generation token; keep search `matchIds` reduction; preserve `<500ms` `readyAt`.
+Delivered: transition throttling — joins skip the tween above `PERF_NODE_LIMIT = 200` visible nodes (`dur = 0`) plus a `renderGen` token; radial uses stable normalized polar coords; search `matchIds` reduction preserved; `<500ms` `readyAt` intact (default layout unchanged). Viewport culling **deferred** — not robust enough to enable without risking current rendering.
 
-### E2E (append)
+### Delivered
+- Modes: `horizontal` (default), `radial`, `cluster` — one shared `update()` join.
+- `applyLayout(root)` unifies the coordinate convention (`d.y` = screen X, `d.x` = screen Y); `linkPath(s,d)` dispatches cubic vs `d3.linkRadial`.
+- `#layout-mode` toolbar select; `_drag*` cleared and disabled off horizontal; `__mindmap.setLayout` / `getLayout` exposed (additive).
+
+### E2E (append) — executed in parent serialized suite
 1. Layout switcher visible / default horizontal
 2. Radial keeps root + five branches
 3. Radial + reset view still visible
@@ -76,6 +90,10 @@ Viewport culling after layout/zoom-end; transition generation token; keep search
 
 **Depends on A’s state store** — extend envelope; no second persistence path.
 
+**Status:** Implemented and integrated (July 19, 2026). Tree snapshot restores before D3 hierarchy; E2E covered in the 108/108 suite.
+Versioned tree-change hooks are additive; the A → C integration restores
+the tree snapshot before D3 hierarchy construction.
+
 ### Editing
 `#edit-mode` toggle → aside form for title / summary / detail / color / source. Add child, delete non-root (confirm). Persist via A’s `saveState` with `schemaVersion` + tree snapshot. `__mindmap.setEditMode|addChild|updateNode|deleteNode`.
 
@@ -87,6 +105,9 @@ Viewport culling after layout/zoom-end; transition generation token; keep search
 - `CONTRIBUTING.md` (zero-build, #12/#15/#17)
 - `.github/ISSUE_TEMPLATE/` bug + feature
 - README/CI note: Playwright `workers:1`, never parallel matrix against machine slot
+
+**Phase 4 docs status:** Complete (`CONTRIBUTING.md`, issue templates, schema
+contract, persistence integration notes, and serialized-runner guidance).
 
 ### E2E (append)
 Edit toggle/fields · edit persists · add child · delete non-root · reload keeps edits · ARIA tree · arrow focus · expand/collapse keys · shortcuts ignore edit fields

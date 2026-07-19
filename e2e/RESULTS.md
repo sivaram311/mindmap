@@ -4,8 +4,9 @@
 - **Role:** E2E hire (QA)
 - **Date:** 2026-07-19
 - **Method:** Playwright 1.61.1 (Chromium, headless)
-- **Runner policy:** single serialized runner (`workers: 1`); final slot `e2e-mindmap-d3-phase2-final-2026-07-19` claimed/released `pass`
+- **Runner policy:** single serialized runner (`workers: 1`); slot `e2e-mindmap-phase3-2026-07-19` claimed/released `pass`
 - **Spec:** `e2e/mindmap.spec.js` · **Config:** `e2e/playwright.config.js`
+- **Report:** `e2e/report.json` — `expected: 108`, `unexpected: 0`, `flaky: 0`, `skipped: 0`
 
 ## How to reproduce
 
@@ -23,7 +24,9 @@ node E:\MyWorkspace\sandbox\library\node_modules\@playwright\test\cli.js test --
 | Desktop | 1280 × 800 |
 | Tablet | 800 × 1280 |
 
-## Results — 39 tests, exit code 0
+## Results — 108 tests (36 × 3 viewports), exit code 0
+
+### Baseline (Phase 1–2)
 
 | # | Check | Result |
 |---|---|---|
@@ -41,15 +44,50 @@ node E:\MyWorkspace\sandbox\library\node_modules\@playwright\test\cli.js test --
 | 12 | Keyboard shortcuts focus/clear search and zoom | **PASS** |
 | 13 | Node drag stores offset and keeps links rendered | **PASS** |
 
-## Phase 2 notes
+### Workstream A — Export & Persistence
 
-- D3 loaded from `vendor/d3.v7.min.js` (offline-safe; no CDN at runtime).
-- Search uses `walkAll` over `children` and `_children` so collapsed matches are found and ancestors expanded.
-- Search is debounced by 140ms and reports match totals.
-- Zoom filter ignores pointer events on `.node` so clicks and node drag do not pan the canvas.
-- Drag updates node offsets and connected links live.
-- Controls remain reachable at 360×780, 1280×800, and 800×1280.
+| # | Check | Result |
+|---|---|---|
+| 14 | Export menu + reset state reachable in viewport | **PASS** |
+| 15 | SVG export downloads offline map with root title | **PASS** |
+| 16 | PNG export downloads non-empty image | **PASS** |
+| 17 | Markdown export includes nested titles while collapsed | **PASS** |
+| 18 | JSON export includes map data + view snapshot | **PASS** |
+| 19 | Collapse/drag/zoom/selection survive reload | **PASS** |
+| 20 | Reset state clears persisted view state | **PASS** |
+| 21 | Reset view preserves custom drag offsets | **PASS** |
+
+### Workstream B — Layout Modes
+
+| # | Check | Result |
+|---|---|---|
+| 22 | Layout switcher visible / default horizontal | **PASS** |
+| 23 | Radial keeps root + five branches | **PASS** |
+| 24 | Radial survives reset view | **PASS** |
+| 25 | Switch back to horizontal restores toggles | **PASS** |
+| 26 | Layout switch completes under 500ms | **PASS** |
+| 27 | Expand-all under radial stays interactive | **PASS** |
+
+### Workstream C — Editing & Accessibility
+
+| # | Check | Result |
+|---|---|---|
+| 28 | Edit mode reveals fields and saves changes | **PASS** |
+| 29 | Edits survive tree rerenders in-session | **PASS** |
+| 30 | Add/delete non-root child with confirmation | **PASS** |
+| 31 | Root cannot be deleted | **PASS** |
+| 32 | Reload restores edits via A state store | **PASS** |
+| 33 | ARIA tree semantics + roving tabindex | **PASS** |
+| 34 | Arrow / Home / End move tree focus | **PASS** |
+| 35 | Left/right expand/collapse while preserving focus | **PASS** |
+| 36 | Global shortcuts do not fire while typing in edit fields | **PASS** |
+
+## Phase 3 notes
+
+- Integrated on `feature/phase3-advanced` (A → B → C merge order).
+- Keyboard typing guard uses both `event.target` and `document.activeElement` (input/textarea/select) so zoom shortcuts cannot steal keys from edit fields under Playwright typing.
+- No CDN / port / DB / auth surface. Offline `file://` preserved.
 
 ## Verdict
 
-**PASS** — Polished Interactive Map (Milestone 2) across all three required viewports.
+**PASS** — Feature-Rich Visualization (Milestone 3) across all three required viewports (108/108).
